@@ -11,6 +11,12 @@ import os
 # 添加项目根目录到Python路径
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+# 导入认证工具
+from auth_utils import require_authentication
+
+# 要求用户必须通过认证
+require_authentication()
+
 from etf_pools import ETF_POOLS_CONFIG
 
 from core_strategy import (
@@ -18,6 +24,9 @@ from core_strategy import (
     fetch_etf_data, calculate_momentum_and_ma, select_etfs,
     render_simplified_bias_table, render_all_etfs_trend_charts
 )
+
+# 导入PDF报告工具
+from pdf_report_utils import generate_and_download_report
 
 # 页面配置
 st.set_page_config(
@@ -130,7 +139,55 @@ if selected_etfs_result is not None and all_etfs_result is not None:
     
     # 显示趋势图
     st.markdown("---")
-    render_all_etfs_trend_charts(selected_etfs, all_etfs)
+    render_all_etfs_trend_charts(selected_etfs, all_etfs, periods=[6, 12, 24])
+
+    # 添加PDF报告下载功能
+    st.markdown("---")
+    st.subheader("📄 PDF报告下载")
+
+    # 检查是否有分析结果
+    if 'selected_etfs_result' in locals() and selected_etfs_result is not None and len(selected_etfs_result) > 0:
+        # 准备报告数据
+        etf_pool_name = config['name']
+        
+        # 获取Bias分析结果（如果有的话）
+        bias_results = None
+        try:
+            # 这里可以调用Bias分析函数获取结果
+            # bias_results = get_bias_analysis_results(selected_etfs)
+            pass
+        except:
+            pass
+        
+        # 获取趋势分析汇总（如果有的话）
+        trend_summary = None
+        try:
+            # 这里可以调用趋势分析函数获取结果
+            # trend_summary = get_trend_summary(selected_etfs)
+            pass
+        except:
+            pass
+        
+        # 获取选中的ETF列表
+        selected_etfs_list = None
+        if 'selected_etfs_result' in locals() and selected_etfs_result:
+            selected_etfs_list = selected_etfs_result
+        
+        # 生成PDF报告
+        if st.button("�� 生成PDF分析报告", type="primary", use_container_width=True):
+            try:
+                generate_and_download_report(
+                    etf_pool_name=etf_pool_name,
+                    momentum_results=selected_etfs_result,
+                    bias_results=bias_results,
+                    trend_summary=trend_summary,
+                    selected_etfs=selected_etfs_list
+                )
+            except Exception as e:
+                st.error(f"生成PDF报告失败: {e}")
+                st.info("请确保已安装所需的依赖包：pip install reportlab")
+    else:
+        st.info("请先进行动量分析，然后才能生成PDF报告")
 
 
 # 侧边栏

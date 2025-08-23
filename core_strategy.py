@@ -479,6 +479,9 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
             # 为每个ETF添加颜色（涨为红色，跌为绿色）
             colors = ['#ff4444' if x > 0 else '#44aa44' for x in momentum_values]
             
+            # 导入水印工具
+            from watermark_utils import add_watermark_to_existing_figure
+            
             # 使用plotly.graph_objects创建更美观的图表
             fig = go.Figure()
             
@@ -535,6 +538,9 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
             # 添加网格线
             fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.1)')
             fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.1)')
+            
+            # 添加水印
+            fig = add_watermark_to_existing_figure(fig)
             
             # 显示图表
             st.plotly_chart(fig, use_container_width=True)
@@ -1519,6 +1525,7 @@ def render_etf_trend_chart(etf_list, etf_names, periods=[6, 12, 24]):
         
         # 创建累计涨跌幅趋势图
         import plotly.graph_objects as go
+        from watermark_utils import add_watermark_to_existing_figure
         
         fig = go.Figure()
         
@@ -1558,8 +1565,12 @@ def render_etf_trend_chart(etf_list, etf_names, periods=[6, 12, 24]):
                 y=1.02,
                 xanchor="right",
                 x=1
-            )
+            ),
+            margin=dict(l=20, r=20, t=60, b=40)  # 为水印留出空间
         )
+        
+        # 添加水印
+        fig = add_watermark_to_existing_figure(fig)
         
         # 显示图表
         st.plotly_chart(fig, use_container_width=True)

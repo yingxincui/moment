@@ -10,7 +10,13 @@ import sys
 import os
 
 # 添加项目根目录到Python路径
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+# 导入认证工具
+from auth_utils import require_authentication
+
+# 要求用户必须通过认证
+require_authentication()
 
 from email_subscription import render_email_subscription_ui, start_email_scheduler
 
