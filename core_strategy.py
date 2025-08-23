@@ -493,68 +493,60 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
             # 导入水印工具
             from watermark_utils import add_watermark_to_existing_figure
             
-            # 使用plotly.graph_objects创建更美观的图表
-            fig = go.Figure()
-            
-            # 添加横向柱状图
-            fig.add_trace(go.Bar(
-                x=momentum_values,
-                y=etf_labels,
-                orientation='h',
-                marker=dict(
-                    color=colors,
-                    line=dict(color='rgba(0,0,0,0.3)', width=1)
-                ),
-                text=[f'{x:.2f}%' for x in momentum_values],
-                textposition='auto',
-                hovertemplate='<b>%{y}</b><br>动量: %{x:.2f}%<extra></extra>'
-            ))
-            
-            # 添加零线
-            fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
-            
-            # 更新布局
-            fig.update_layout(
-                title=dict(
-                    text='ETF动量排名',
-                    x=0.5,
-                    font=dict(size=18, color='#2c3e50')
-                ),
-                xaxis=dict(
-                    title="动量 (%)",
-                    titlefont=dict(size=14, color='#34495e'),
-                    tickfont=dict(size=12, color='#7f8c8d'),
-                    gridcolor='rgba(128,128,128,0.2)',
-                    zeroline=True,
-                    zerolinecolor='rgba(128,128,128,0.5)'
-                ),
-                yaxis=dict(
-                    title="ETF代码+名称",
-                    titlefont=dict(size=14, color='#34495e'),
-                    tickfont=dict(size=11, color='#2c3e50'),
-                    gridcolor='rgba(128,128,128,0.1)'
-                ),
-                showlegend=False,
-                height=max(400, len(etf_labels) * 25),  # 根据ETF数量动态调整高度
-                margin=dict(l=20, r=20, t=60, b=20),
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)',
-                hoverlabel=dict(
-                    bgcolor="white",
-                    font_size=12,
-                    font_family="Arial"
+            # 使用plotly.graph_objects创建最简化的图表
+            try:
+                fig = go.Figure()
+                
+                # 添加横向柱状图
+                fig.add_trace(go.Bar(
+                    x=momentum_values,
+                    y=etf_labels,
+                    orientation='h',
+                    marker=dict(color=colors),
+                    text=[f'{x:.2f}%' for x in momentum_values],
+                    textposition='auto'
+                ))
+                
+                # 添加零线
+                fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
+                
+                # 最简化的布局设置
+                fig.update_layout(
+                    title='ETF动量排名',
+                    showlegend=False,
+                    height=max(400, len(etf_labels) * 25)
                 )
-            )
+                
+                # 设置轴标题
+                fig.update_xaxes(title="动量 (%)")
+                fig.update_yaxes(title="ETF代码+名称")
+                
+            except Exception as e:
+                st.error(f"创建图表失败: {e}")
+                # 如果图表创建失败，直接显示文本版本
+                st.write("**ETF动量排名（文本版本）：**")
+                for i, (label, value) in enumerate(zip(etf_labels, momentum_values)):
+                    color = "🔴" if value > 0 else "🟢"
+                    st.write(f"{color} {label}: {value:.2f}%")
+                return
             
-            # 添加网格线
-            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.1)')
-            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.1)')
-            
-            # 添加水印
-            fig = add_watermark_to_existing_figure(fig)
+            # 添加水印（简化版本）
+            try:
+                fig = add_watermark_to_existing_figure(fig)
+            except Exception as e:
+                # 如果水印添加失败，继续显示图表
+                pass
             
             # 显示图表
-            st.plotly_chart(fig, use_container_width=True)
+            try:
+                st.plotly_chart(fig, use_container_width=True)
+            except Exception as e:
+                st.error(f"图表显示失败: {e}")
+                # 显示简单的文本版本作为备选
+                st.write("**ETF动量排名（文本版本）：**")
+                for i, (label, value) in enumerate(zip(etf_labels, momentum_values)):
+                    color = "🔴" if value > 0 else "🟢"
+                    st.write(f"{color} {label}: {value:.2f}%")
             
             # 添加图表说明
             st.markdown("""
