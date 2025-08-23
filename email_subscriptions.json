@@ -1,0 +1,21 @@
+{
+  "test@example.com": {
+    "etf_pools": [
+      "默认组合",
+      "科创创业"
+    ],
+    "frequency": "daily",
+    "subscribe_date": "2025-08-23T11:05:41.001268",
+    "last_sent": null,
+    "active": false
+  },
+  "529704243@qq.com": {
+    "etf_pools": [
+      "默认组合"
+    ],
+    "frequency": "daily",
+    "subscribe_date": "2025-08-23T11:07:53.682908",
+    "last_sent": null,
+    "active": true
+  }
+}

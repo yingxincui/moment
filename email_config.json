@@ -1,0 +1,12 @@
+{
+  "smtp_server": "smtp.qq.com",
+  "smtp_port": 587,
+  "use_tls": true,
+  "sender_email": "",
+  "sender_password": "",
+  "daily_send_time": "18:00",
+  "weekly_send_day": "monday",
+  "weekly_send_time": "18:00",
+  "max_retries": 3,
+  "retry_delay": 300
+}

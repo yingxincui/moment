@@ -1,0 +1,16 @@
+# ETF动量策略系统依赖包
+
+# 核心依赖
+streamlit>=1.28.0
+pandas>=1.5.0
+numpy>=1.24.0
+akshare>=1.12.0
+
+# 邮件功能依赖
+schedule>=1.2.0
+
+# 数据处理和可视化
+plotly>=5.15.0
+
+# 其他工具
+python-dateutil>=2.8.0
