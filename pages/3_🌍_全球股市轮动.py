@@ -31,16 +31,16 @@ from pdf_report_utils import generate_and_download_report
 # 页面配置
 st.set_page_config(
     page_title="全球股市轮动 - 大类资产轮动",
-    page_icon="🌍",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # 页面标题
-st.title("🌍 全球股市轮动")
+st.title(" 全球股市轮动")
 
 # 策略说明 - 可折叠组件
-with st.expander("📋 策略说明", expanded=False):
+with st.expander(" 策略说明", expanded=False):
     st.markdown("""
     **策略说明**
     
@@ -134,7 +134,7 @@ if selected_etfs_result is not None and all_etfs_result is not None:
     
     # 添加Bias分析
     st.markdown("---")
-    st.subheader("📊 Bias分析")
+    st.subheader(" Bias分析")
     render_simplified_bias_table(selected_etfs, all_etfs)
     
     # 显示趋势图
@@ -143,7 +143,7 @@ if selected_etfs_result is not None and all_etfs_result is not None:
 
     # 添加PDF报告下载功能
     st.markdown("---")
-    st.subheader("📄 PDF报告下载")
+    st.subheader(" PDF报告下载")
 
     # 检查是否有分析结果
     if 'selected_etfs_result' in locals() and selected_etfs_result is not None and len(selected_etfs_result) > 0:
@@ -191,13 +191,13 @@ if selected_etfs_result is not None and all_etfs_result is not None:
 
 
 # 侧边栏
-st.sidebar.subheader("🌍 ETF组合说明")
+st.sidebar.subheader(" ETF组合说明")
 st.sidebar.markdown(f"""
 **{config['name']}：**
 - 300ETF(510300)、中概互联网ETF(513050)、纳指ETF(159941)
 - 日经ETF(513520)、德国ETF(513030)、东南亚科技ETF(513730)、沙特ETF(159329)
 
-💡 **使用说明：**
+ **使用说明：**
 - 覆盖中美欧日等主要市场
 - 支持全球资产配置
 - 选择ETF后自动进行分析
@@ -208,7 +208,7 @@ cache_meta = load_cache_meta()
 render_cache_info(cache_meta)
 
 # 手动刷新按钮
-if st.button("🔄 手动刷新数据"):
+if st.button(" 手动刷新数据"):
     if 'momentum_results' in st.session_state:
         del st.session_state.momentum_results
     if 'momentum_params' in st.session_state:

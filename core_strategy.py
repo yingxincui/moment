@@ -284,7 +284,7 @@ def render_analysis_results(momentum_results, etf_pool):
         st.warning("暂无计算结果，请先计算动量")
         return
     
-    st.subheader("📊 动量分析结果")
+    st.subheader("动量分析结果")
     
     # 显示结果表格
     # 显示表格，不设置高度避免滚动条
@@ -293,7 +293,7 @@ def render_analysis_results(momentum_results, etf_pool):
     # 显示图表
     if not momentum_results.empty:
         # 动量
-        st.subheader("📈 动量")
+        st.subheader("动量")
         momentum_scores = momentum_results['动量得分'].values
         
         # 创建柱状图
@@ -305,7 +305,7 @@ def render_analysis_results(momentum_results, etf_pool):
         st.bar_chart(chart_data.set_index('ETF'))
         
         # 显示详细信息
-        st.subheader("📋 详细信息")
+        st.subheader("详细信息")
         for _, row in momentum_results.iterrows():
             with st.expander(f"{row['ETF代码']} - {etf_pool.get(row['ETF代码'], '未知')}"):
                 st.write(f"**动量**: {row['动量得分']:.4f}")
@@ -325,11 +325,11 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
         ma_period: 均线周期
         max_positions: 最大持仓数量
     """
-    st.subheader("📊 动量策略分析结果")
+    st.subheader("动量策略分析结果")
     
     # 显示选中的ETF（仅显示标题，不显示文字提示）
     if selected_etfs_result:
-        st.subheader("🎯 推荐持仓")
+        st.subheader("推荐持仓")
         
         # 构建推荐的ETF列表
         etf_list = []
@@ -342,17 +342,17 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
         
         # 添加策略说明
         st.info(f"""
-**📋 持仓策略说明：**
+** 持仓策略说明：**
 
 • **默认推荐前两名**：系统基于动量策略自动选择动量最强且趋势向上的前2只ETF
 • **缓冲机制**：可以持有前三名，提供一定的缓冲空间
 • **调仓条件**：只有当ETF掉到第四名时才进行调仓
 • **风险控制**：结合价格与均线关系，确保趋势向上
 
-**🎯 当前推荐标的：**
+** 当前推荐标的：**
 {etf_list_text}
 
-**💡 操作建议：**
+** 操作建议：**
 - 当前持仓：{len(selected_etfs_result)}只ETF
 - 建议：可以适当持有第3名ETF作为缓冲
 - 调仓时机：关注排名变化，避免频繁交易
@@ -360,12 +360,12 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
     
     # 显示所有ETF的排名
     if all_etfs_result:
-        st.subheader("📈 所有ETF动量排名")
+        st.subheader("所有ETF动量排名")
         # 创建所有ETF的表格
         all_data = []
         for etf in all_etfs_result:
             if len(etf) >= 6:
-                status = "✅ 推荐" if etf[5] else "❌ 不符合条件"
+                status = "推荐" if etf[5] else "不符合条件"
                 all_data.append({
                     'ETF代码': etf[0],
                     'ETF名称': etf[1],
@@ -406,9 +406,9 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
                 def color_status_values(val):
                     """为状态值添加颜色"""
                     if isinstance(val, str):
-                        if '✅ 推荐' in val:
+                        if '推荐' in val:
                             return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold; border-radius: 4px; padding: 4px 8px; border: 2px solid #4caf50;'
-                        elif '❌ 不符合条件' in val:
+                        elif '不符合条件' in val:
                             return 'background-color: #ffebee; color: #c62828; font-weight: bold; border-radius: 4px; padding: 4px 8px; border: 2px solid #f44336;'
                     return ''
                 
@@ -441,24 +441,35 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
             # 添加表格说明
             st.markdown("""
             <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-top: 15px;'>
-                <strong>📊 动量排名表格说明：</strong><br>
+                <strong>动量排名表格说明：</strong><br>
                 <strong>动量颜色含义：</strong><br>
-                • <span style='color: #c62828;'>🔴 深红色</span>：超强动量（>5%）<br>
-                • <span style='color: #b71c1c;'>🔴 红色</span>：强动量（2-5%）<br>
-                • <span style='color: #ef6c00;'>🟠 橙色</span>：正动量（0-2%）<br>
-                • <span style='color: #424242;'>⚪ 灰色</span>：轻微负动量（-2% 到 0%）<br>
-                • <span style='color: #2e7d32;'>🟢 绿色</span>：负动量（-5% 到 -2%）<br>
-                • <span style='color: #1b5e20;'>🟢 深绿色</span>：强负动量（<-5%）<br>
+                • <span style='color: #c62828;'>深红色</span>：超强动量（>5%）<br>
+                • <span style='color: #b71c1c;'>红色</span>：强动量（2-5%）<br>
+                • <span style='color: #ef6c00;'>橙色</span>：正动量（0-2%）<br>
+                • <span style='color: #424242;'>灰色</span>：轻微负动量（-2% 到 0%）<br>
+                • <span style='color: #2e7d32;'>绿色</span>：负动量（-5% 到 -2%）<br>
+                • <span style='color: #1b5e20;'>深绿色</span>：强负动量（<-5%）<br>
                 <br>
-                <strong>状态说明：</strong>✅ 推荐 = 符合动量策略条件，❌ 不符合条件 = 不满足策略要求
+                <strong>状态说明：</strong>推荐 = 符合动量策略条件，不符合条件 = 不满足策略要求
             </div>
             """, unsafe_allow_html=True)
             
             # 显示动量排名图
-            st.subheader("📊 动量排名图")
+            st.subheader("动量排名图")
+            
+            # 数据验证
+            if not all_etfs_result or len(all_etfs_result) == 0:
+                st.warning("暂无ETF数据可供分析")
+                return
+                
             # 按动量排序（从高到低）
             sorted_data = sorted([(etf[0], etf[1], etf[4]*100) for etf in all_etfs_result if len(etf) >= 6], 
                                 key=lambda x: x[2], reverse=True)
+            
+            if not sorted_data:
+                st.warning("暂无有效的动量数据可供分析")
+                return
+                
             etf_codes = [item[0] for item in sorted_data]
             etf_names = [item[1] for item in sorted_data]
             momentum_values = [item[2] for item in sorted_data]
@@ -505,7 +516,7 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
             # 更新布局
             fig.update_layout(
                 title=dict(
-                    text='📊 ETF动量排名',
+                    text='ETF动量排名',
                     x=0.5,
                     font=dict(size=18, color='#2c3e50')
                 ),
@@ -548,9 +559,9 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
             # 添加图表说明
             st.markdown("""
             <div style='background-color: #f8f9fa; padding: 10px; border-radius: 5px; border-left: 4px solid #28a745; margin-top: 15px;'>
-                <strong>📈 图表说明：</strong><br>
-                • <span style='color: #ff4444;'>🔴 红色</span>：正动量（上涨）<br>
-                • <span style='color: #44aa44;'>🟢 绿色</span>：负动量（下跌）<br>
+                <strong>图表说明：</strong><br>
+                • <span style='color: #ff4444;'>红色</span>：正动量（上涨）<br>
+                • <span style='color: #44aa44;'>绿色</span>：负动量（下跌）<br>
                 • 图表按动量从高到低排序，动量最高的ETF显示在最上方
             </div>
             """, unsafe_allow_html=True)
@@ -565,7 +576,7 @@ def render_cache_info(cache_meta):
         cache_meta: 缓存元数据
     """
     if cache_meta:
-        st.sidebar.info(f"📅 数据更新时间: {cache_meta.get('update_time', '未知')}")
+        st.sidebar.info(f" 数据更新时间: {cache_meta.get('update_time', '未知')}")
         st.sidebar.info(f" 数据来源: {cache_meta.get('source', '未知')}")
 
 def small_log(message):
@@ -868,7 +879,7 @@ def render_backtest_results(backtest_results, trade_history, holdings_history):
         st.warning("暂无回测结果")
         return
     
-    st.subheader("📊 回测结果")
+    st.subheader(" 回测结果")
     
     # 显示关键指标
     col1, col2, col3, col4 = st.columns(4)
@@ -883,7 +894,7 @@ def render_backtest_results(backtest_results, trade_history, holdings_history):
     
     # 显示净值曲线
     if 'portfolio_values' in backtest_results and 'dates' in backtest_results:
-        st.subheader("📈 净值曲线")
+        st.subheader(" 净值曲线")
         chart_data = pd.DataFrame({
             '日期': backtest_results['dates'],
             '净值': backtest_results['portfolio_values']
@@ -895,14 +906,14 @@ def render_backtest_results(backtest_results, trade_history, holdings_history):
     
     # 显示交易历史
     if trade_history:
-        st.subheader("📋 交易历史")
+        st.subheader(" 交易历史")
         trade_df = pd.DataFrame(trade_history)
         # 显示表格，不设置高度避免滚动条
         st.dataframe(trade_df, use_container_width=True)
     
     # 显示持仓历史
     if holdings_history:
-        st.subheader("📊 持仓历史")
+        st.subheader(" 持仓历史")
         holdings_df = pd.DataFrame(holdings_history)
         # 显示表格，不设置高度避免滚动条
         st.dataframe(holdings_df, use_container_width=True)
@@ -1011,7 +1022,7 @@ def render_bias_analysis(etf_code, etf_name, df, periods=[6, 12, 24]):
         df: 价格数据
         periods: 分析周期
     """
-    st.subheader(f"🔍 {etf_code} - {etf_name} 偏离度分析")
+    st.subheader(f" {etf_code} - {etf_name} 偏离度分析")
     
     # 计算偏离度
     bias_data = calculate_bias_analysis(df, periods)
@@ -1043,18 +1054,18 @@ def render_bias_analysis(etf_code, etf_name, df, periods=[6, 12, 24]):
         
         # 根据状态显示不同的颜色
         if "强势上涨" in status:
-            st.success(f"📈 当前状态: {status}")
+            st.success(f" 当前状态: {status}")
         elif "强势下跌" in status:
             st.error(f"📉 当前状态: {status}")
         elif "反弹" in status:
-            st.warning(f"🔄 当前状态: {status}")
+            st.warning(f" 当前状态: {status}")
         elif "回调" in status:
-            st.info(f"📊 当前状态: {status}")
+            st.info(f" 当前状态: {status}")
         else:
-            st.info(f"📊 当前状态: {status}")
+            st.info(f" 当前状态: {status}")
     
     # 显示偏离度趋势图
-    st.subheader("📈 偏离度趋势")
+    st.subheader(" 偏离度趋势")
     
     # 准备图表数据
     chart_data = pd.DataFrame(bias_data)
@@ -1064,7 +1075,7 @@ def render_bias_analysis(etf_code, etf_name, df, periods=[6, 12, 24]):
     st.line_chart(chart_data, use_container_width=True)
     
     # 显示偏离度统计信息
-    st.subheader("📊 偏离度统计")
+    st.subheader(" 偏离度统计")
     
     stats_data = []
     for period, bias in bias_data.items():
@@ -1085,7 +1096,7 @@ def render_bias_analysis(etf_code, etf_name, df, periods=[6, 12, 24]):
         st.dataframe(stats_df, use_container_width=True)
     
     # 显示动态阈值分析
-    st.subheader("🎯 动态阈值分析")
+    st.subheader(" 动态阈值分析")
     
     for period, bias in bias_data.items():
         if not bias.empty:
@@ -1106,11 +1117,11 @@ def render_bias_analysis(etf_code, etf_name, df, periods=[6, 12, 24]):
             
             # 判断是否超阈值
             if abs(current_bias) > threshold_2:
-                st.warning(f"⚠️ {period_num}日偏离度超过2σ阈值，可能存在超买超卖")
+                st.warning(f" {period_num}日偏离度超过2σ阈值，可能存在超买超卖")
             elif abs(current_bias) > threshold_1:
                 st.info(f"ℹ️ {period_num}日偏离度超过1σ阈值，需要关注")
             else:
-                st.success(f"✅ {period_num}日偏离度在正常范围内")
+                st.success(f" {period_num}日偏离度在正常范围内")
 
 def render_simplified_bias_table(etf_list, etf_names, periods=[6, 12, 24]):
     """
@@ -1208,15 +1219,15 @@ def render_simplified_bias_table(etf_list, etf_names, periods=[6, 12, 24]):
             def color_conclusion(val):
                 """为超买超卖结论添加颜色"""
                 if isinstance(val, str):
-                    if '🔴' in val or '超买' in val:
+                    if '' in val or '超买' in val:
                         return 'background-color: #ffebee; color: #c62828; font-weight: bold'
-                    elif '🟢' in val or '超卖' in val:
+                    elif '' in val or '超卖' in val:
                         return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold'
                     elif '🟡' in val or '偏超买' in val:
                         return 'background-color: #fff3e0; color: #ef6c00; font-weight: bold'
-                    elif '🟠' in val or '偏超卖' in val:
+                    elif '' in val or '偏超卖' in val:
                         return 'background-color: #f3e5f5; color: #7b1fa2; font-weight: bold'
-                    elif '⚪' in val or '正常' in val:
+                    elif '' in val or '正常' in val:
                         return 'background-color: #f5f5f5; color: #424242; font-weight: bold'
                 return ''
             
@@ -1235,13 +1246,13 @@ def render_simplified_bias_table(etf_list, etf_names, periods=[6, 12, 24]):
         # 添加表格说明
         st.markdown("""
         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-top: 15px;'>
-            <strong>📊 Bias分析说明：</strong><br>
+            <strong> Bias分析说明：</strong><br>
             <strong>偏离度颜色含义：</strong><br>
-            • <span style='color: #c62828;'>🔴 深红色</span>：超买（>5%）<br>
-            • <span style='color: #ef6c00;'>🟠 橙色</span>：偏超买（2-5%）<br>
-            • <span style='color: #424242;'>⚪ 灰色</span>：正常（-2% 到 2%）<br>
+            • <span style='color: #c62828;'> 深红色</span>：超买（>5%）<br>
+            • <span style='color: #ef6c00;'> 橙色</span>：偏超买（2-5%）<br>
+            • <span style='color: #424242;'> 灰色</span>：正常（-2% 到 2%）<br>
             • <span style='color: #7b1fa2;'>🟣 紫色</span>：偏超卖（-5% 到 -2%）<br>
-            • <span style='color: #2e7d32;'>🟢 深绿色</span>：超卖（<-5%）<br>
+            • <span style='color: #2e7d32;'> 深绿色</span>：超卖（<-5%）<br>
             <br>
             <strong>超买超卖结论：</strong>基于6日、12日、24日偏离度的综合判断
         </div>
@@ -1262,7 +1273,7 @@ def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_
         ma_period: 均线周期
         max_positions: 最大持仓数量
     """
-    st.subheader("📊 增强版动量策略分析结果")
+    st.subheader(" 增强版动量策略分析结果")
     
     # 显示策略参数
     col1, col2, col3 = st.columns(3)
@@ -1275,7 +1286,7 @@ def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_
         
         # 显示选中的ETF（仅显示标题，不显示文字提示）
         if selected_etfs_result:
-            st.subheader("🎯 推荐持仓")
+            st.subheader(" 推荐持仓")
             
             # 构建推荐的ETF列表
             etf_list = []
@@ -1288,17 +1299,17 @@ def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_
             
             # 添加策略说明
             st.info(f"""
-**📋 持仓策略说明：**
+** 持仓策略说明：**
 
 • **默认推荐前两名**：系统基于动量策略自动选择动量最强且趋势向上的前2只ETF
 • **缓冲机制**：可以持有前三名，提供一定的缓冲空间
 • **调仓条件**：只有当ETF掉到第四名时才进行调仓
 • **风险控制**：结合价格与均线关系，确保趋势向上
 
-**🎯 当前推荐标的：**
+** 当前推荐标的：**
 {etf_list_text}
 
-**💡 操作建议：**
+** 操作建议：**
 - 当前持仓：{len(selected_etfs_result)}只ETF
 - 建议：可以适当持有第3名ETF作为缓冲
 - 调仓时机：关注排名变化，避免频繁交易
@@ -1306,12 +1317,12 @@ def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_
     
     # 显示所有ETF的排名
     if all_etfs_result:
-        st.subheader("📈 所有ETF动量排名")
+        st.subheader(" 所有ETF动量排名")
         # 创建所有ETF的表格
         all_data = []
         for etf in all_etfs_result:
             if len(etf) >= 6:
-                status = "✅ 推荐" if etf[5] else "❌ 不符合条件"
+                status = " 推荐" if etf[5] else " 不符合条件"
                 all_data.append({
                     'ETF代码': etf[0],
                     'ETF名称': etf[1],
@@ -1328,7 +1339,7 @@ def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_
             st.dataframe(all_df, use_container_width=True)
             
             # 显示动量对比柱状图
-            st.subheader("📊 动量对比")
+            st.subheader(" 动量对比")
             # 按动量排序（从高到低）
             sorted_data = sorted([(etf[0], etf[4]*100) for etf in all_etfs_result if len(etf) >= 6],
                                 key=lambda x: x[1], reverse=True)
@@ -1344,7 +1355,7 @@ def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_
             st.bar_chart(chart_data.set_index('ETF'), use_container_width=True)
     
     # 显示策略说明
-    st.subheader("💡 策略说明")
+    st.subheader(" 策略说明")
     st.markdown("""
     **增强版动量策略逻辑：**
     1. **动量计算**: 计算各ETF在{momentum_period}天内的价格变化百分比
@@ -1378,28 +1389,28 @@ def get_bias_conclusion(bias_6, bias_12, bias_24):
         lower_6, lower_12, lower_24 = -5.0, -3.0, -2.0  # 超卖阈值
         
         if bias_6 > upper_6 and bias_12 > upper_12 and bias_24 > upper_24:
-            return f"🔴 超买 (6日:{bias_6:.1f}%>{upper_6:.1f}%)", "danger"
+            return f" 超买 (6日:{bias_6:.1f}%>{upper_6:.1f}%)", "danger"
         elif bias_6 < lower_6 and bias_12 < lower_12 and bias_24 < lower_24:
-            return f"🟢 超卖 (6日:{bias_6:.1f}%<{lower_6:.1f}%)", "success"
+            return f" 超卖 (6日:{bias_6:.1f}%<{lower_6:.1f}%)", "success"
         elif bias_6 > upper_6 * 0.8 or bias_12 > upper_12 * 0.8:
             return f"🟡 偏超买 (6日:{bias_6:.1f}%)", "warning"
         elif bias_6 < lower_6 * 0.8 or bias_12 < lower_12 * 0.8:
-            return f"🟠 偏超卖 (6日:{bias_6:.1f}%)", "warning"
+            return f" 偏超卖 (6日:{bias_6:.1f}%)", "warning"
         else:
-            return f"⚪ 正常 (6日:{bias_6:.1f}%)", "info"
+            return f" 正常 (6日:{bias_6:.1f}%)", "info"
             
     except:
         # 如果动态计算失败，使用传统固定阈值
         if bias_6 > 5 and bias_12 > 3 and bias_24 > 2:
-            return "🔴 超买", "danger"
+            return " 超买", "danger"
         elif bias_6 < -5 and bias_12 < -3 and bias_24 < -2:
-            return "🔴 超卖", "success"
+            return " 超卖", "success"
         elif bias_6 > 3 or bias_12 > 2:
             return "🟡 偏超买", "warning"
         elif bias_6 < -3 or bias_12 < -2:
-            return "🟠 偏超卖", "warning"
+            return " 偏超卖", "warning"
         else:
-            return "⚪ 正常", "info"
+            return " 正常", "info"
 
 def show_bias_statistics(bias_results):
     """
@@ -1444,14 +1455,14 @@ def show_bias_statistics(bias_results):
         st.metric("⚖️ 正常标的", f"{normal_count}只", delta=f"{normal_count/len(bias_results)*100:.1f}%")
     
     # 显示投资建议
-    st.subheader("💡 投资建议")
+    st.subheader(" 投资建议")
     
     if overbought_count > len(bias_results) * 0.3:
         st.warning("🚨 市场整体偏热，建议谨慎操作，注意风险控制")
     elif oversold_count > len(bias_results) * 0.3:
-        st.success("🎯 市场整体偏冷，可能存在投资机会，建议关注超卖标的")
+        st.success(" 市场整体偏冷，可能存在投资机会，建议关注超卖标的")
     else:
-        st.info("📊 市场整体平衡，建议根据个股情况灵活操作")
+        st.info(" 市场整体平衡，建议根据个股情况灵活操作")
     
     # 显示具体建议
     if overbought_count > 0:
@@ -1477,7 +1488,7 @@ def render_etf_trend_chart(etf_list, etf_names, periods=[6, 12, 24]):
         etf_names: ETF名称字典
         periods: 分析周期（用于计算偏离度）
     """
-    st.subheader("📈 所有ETF近一年累计涨跌幅趋势")
+    st.subheader(" 所有ETF近一年累计涨跌幅趋势")
     
     try:
         # 收集所有ETF的数据
@@ -1576,7 +1587,7 @@ def render_etf_trend_chart(etf_list, etf_names, periods=[6, 12, 24]):
         st.plotly_chart(fig, use_container_width=True)
         
         # 计算并显示对比表格
-        st.subheader("📊 近一年表现对比")
+        st.subheader(" 近一年表现对比")
         
         comparison_data = []
         successful_etfs = []  # 记录成功计算指标的ETF
@@ -1743,30 +1754,30 @@ def render_etf_trend_chart(etf_list, etf_names, periods=[6, 12, 24]):
             # 添加表格说明
             st.markdown("""
             <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-top: 15px;'>
-                <strong>📊 近一年表现对比表格说明：</strong><br>
+                <strong> 近一年表现对比表格说明：</strong><br>
                 <strong>涨跌幅颜色含义：</strong><br>
-                • <span style='color: #c62828;'>🔴 深红色</span>：超强表现（>10%）<br>
-                • <span style='color: #b71c1c;'>🔴 红色</span>：强表现（5-10%）<br>
-                • <span style='color: #ef6c00;'>🟠 橙色</span>：正表现（0-5%）<br>
-                • <span style='color: #424242;'>⚪ 灰色</span>：轻微负表现（-5% 到 0%）<br>
-                • <span style='color: #2e7d32;'>🟢 绿色</span>：负表现（-10% 到 -5%）<br>
-                • <span style='color: #1b5e20;'>🟢 深绿色</span>：强负表现（<-10%）<br>
+                • <span style='color: #c62828;'> 深红色</span>：超强表现（>10%）<br>
+                • <span style='color: #b71c1c;'> 红色</span>：强表现（5-10%）<br>
+                • <span style='color: #ef6c00;'> 橙色</span>：正表现（0-5%）<br>
+                • <span style='color: #424242;'> 灰色</span>：轻微负表现（-5% 到 0%）<br>
+                • <span style='color: #2e7d32;'> 绿色</span>：负表现（-10% 到 -5%）<br>
+                • <span style='color: #1b5e20;'> 深绿色</span>：强负表现（<-10%）<br>
                 <br>
                 <strong>夏普比率颜色含义：</strong><br>
-                • <span style='color: #2e7d32;'>🟢 绿色</span>：优秀（>1.5）<br>
-                • <span style='color: #ef6c00;'>🟠 橙色</span>：良好（0.5-1.5）<br>
-                • <span style='color: #424242;'>⚪ 灰色</span>：一般（0-0.5）<br>
-                • <span style='color: #c62828;'>🔴 红色</span>：较差（<0）<br>
+                • <span style='color: #2e7d32;'> 绿色</span>：优秀（>1.5）<br>
+                • <span style='color: #ef6c00;'> 橙色</span>：良好（0.5-1.5）<br>
+                • <span style='color: #424242;'> 灰色</span>：一般（0-0.5）<br>
+                • <span style='color: #c62828;'> 红色</span>：较差（<0）<br>
                 <br>
                 <strong>波动率颜色含义：</strong><br>
-                • <span style='color: #2e7d32;'>🟢 绿色</span>：低波动（<15%）<br>
-                • <span style='color: #ef6c00;'>🟠 橙色</span>：中波动（15-25%）<br>
-                • <span style='color: #c62828;'>🔴 红色</span>：高波动（>25%）
+                • <span style='color: #2e7d32;'> 绿色</span>：低波动（<15%）<br>
+                • <span style='color: #ef6c00;'> 橙色</span>：中波动（15-25%）<br>
+                • <span style='color: #c62828;'> 红色</span>：高波动（>25%）
             </div>
             """, unsafe_allow_html=True)
             
             # 显示统计摘要
-            st.subheader("📈 表现统计摘要")
+            st.subheader(" 表现统计摘要")
             
             col1, col2, col3, col4 = st.columns(4)
             

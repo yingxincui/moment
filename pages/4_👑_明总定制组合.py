@@ -31,16 +31,16 @@ from pdf_report_utils import generate_and_download_report
 # 页面配置
 st.set_page_config(
     page_title="明总定制组合 - 大类资产轮动",
-    page_icon="👑",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # 页面标题
-st.title("👑 明总定制组合")
+st.title(" 明总定制组合")
 
 # 策略说明 - 可折叠组件
-with st.expander("📋 策略说明", expanded=False):
+with st.expander(" 策略说明", expanded=False):
     st.markdown("""
     **策略说明**
     
@@ -139,7 +139,7 @@ if selected_etfs_result is not None and all_etfs_result is not None:
     
     # 添加Bias分析
     st.markdown("---")
-    st.subheader("📊 Bias分析")
+    st.subheader(" Bias分析")
     render_simplified_bias_table(selected_etfs, all_etfs)
     
     # 显示趋势图
@@ -148,7 +148,7 @@ if selected_etfs_result is not None and all_etfs_result is not None:
 
     # 添加PDF报告下载功能
     st.markdown("---")
-    st.subheader("📄 PDF报告下载")
+    st.subheader(" PDF报告下载")
 
     # 检查是否有分析结果
     if 'selected_etfs_result' in locals() and selected_etfs_result is not None and len(selected_etfs_result) > 0:
@@ -179,7 +179,7 @@ if selected_etfs_result is not None and all_etfs_result is not None:
             selected_etfs_list = selected_etfs_result
         
         # 生成PDF报告
-        if st.button("📥 生成PDF分析报告", type="primary", use_container_width=True):
+        if st.button(" 生成PDF分析报告", type="primary", use_container_width=True):
             try:
                 generate_and_download_report(
                     etf_pool_name=etf_pool_name,
@@ -195,14 +195,14 @@ if selected_etfs_result is not None and all_etfs_result is not None:
         st.info("请先进行动量分析，然后才能生成PDF报告")
 
 # 侧边栏
-st.sidebar.subheader("👑 明总定制组合说明")
+st.sidebar.subheader(" 明总定制组合说明")
 st.sidebar.markdown(f"""
 **{config['name']}：**
 - 300ETF(510300)、创业板(159915)、中概互联网ETF(513050)
 - 纳指ETF(159941)、黄金ETF(518880)、30年国债(511090)
 - 科创创业ETF(159781)、科创50ETF(588000)
 
-💡 **使用说明：**
+ **使用说明：**
 - 选择ETF后自动进行分析
 - 支持自定义策略参数
 - 实时获取最新数据
@@ -214,7 +214,7 @@ cache_meta = load_cache_meta()
 render_cache_info(cache_meta)
 
 # 手动刷新按钮
-if st.button("🔄 手动刷新数据"):
+if st.button(" 手动刷新数据"):
     if 'mingzong_momentum_results' in st.session_state:
         del st.session_state.mingzong_momentum_results
     if 'mingzong_momentum_params' in st.session_state:

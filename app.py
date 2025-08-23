@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(__file__))
 # 设置页面配置
 st.set_page_config(
     page_title="ETF动量策略分析系统",
-    page_icon="📈",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -38,7 +38,7 @@ if not st.session_state.authenticated:
     # 暗号输入界面
     st.markdown("""
     <div style='text-align: center; padding: 40px;'>
-        <h2>🚀 欢迎使用ETF动量策略分析系统</h2>
+        <h2> 欢迎使用ETF动量策略分析系统</h2>
         <p style='font-size: 18px; color: #666; margin: 20px 0;'>
             请输入暗号以访问系统功能
         </p>
@@ -60,15 +60,15 @@ if not st.session_state.authenticated:
             if secret_input == SECRET_CODE:
                 st.session_state.authenticated = True
                 st.session_state.auth_timestamp = st.session_state.get('_session_id', 'unknown')
-                st.success("✅ 暗号验证成功！正在进入系统...")
+                st.success(" 暗号验证成功！正在进入系统...")
                 st.rerun()
             else:
-                st.error("❌ 暗号错误，请重新输入！")
+                st.error(" 暗号错误，请重新输入！")
                 st.session_state.authenticated = False
                 st.session_state.auth_timestamp = None
         
         # 提示信息
-        st.info("💡 提示：请输入暗号验证身份")
+        st.info(" 提示：请输入暗号验证身份")
     
     # 页脚
     st.markdown("---")
@@ -103,7 +103,7 @@ if not st.session_state.redirected_to_default:
     st.session_state.redirected_to_default = True
     
     # 显示重定向信息
-    st.info("🔄 正在跳转到默认组合页面...")
+    st.info(" 正在跳转到默认组合页面...")
     
     # 使用Streamlit的重定向方法
     try:
@@ -115,7 +115,7 @@ if not st.session_state.redirected_to_default:
     st.stop()
 
 # 如果重定向失败，显示主页面内容
-st.title("📈 ETF动量策略分析系统")
+st.title(" ETF动量策略分析系统")
 
 # 添加登出按钮
 col1, col2, col3 = st.columns([3, 1, 1])
@@ -128,23 +128,23 @@ with col3:
             del st.session_state.auth_timestamp
         if 'redirected_to_default' in st.session_state:
             del st.session_state.redirected_to_default
-        st.success("✅ 已安全登出！")
+        st.success(" 已安全登出！")
         st.rerun()
 
 st.markdown("---")
 
 # 显示欢迎信息
 st.markdown("""
-## 🎯 系统介绍
+##  系统介绍
 
 这是一个基于动量策略的ETF投资分析系统，支持多种ETF组合配置：
 
-- **📊 默认组合**: 包含A股、美股、黄金、债券等主要资产类别
-- **🚀 科创创业**: 用科创创业ETF替代创业板，更聚焦科技创新企业  
-- **🌍 全球股市轮动**: 覆盖中美欧日等主要市场，支持全球资产配置
-- **👑 明总定制组合**: 在默认组合基础上增加科创创业ETF和科创50ETF
+- ** 默认组合**: 包含A股、美股、黄金、债券等主要资产类别
+- ** 科创创业**: 用科创创业ETF替代创业板，更聚焦科技创新企业  
+- ** 全球股市轮动**: 覆盖中美欧日等主要市场，支持全球资产配置
+- ** 明总定制组合**: 在默认组合基础上增加科创创业ETF和科创50ETF
 
-## 🚀 快速开始
+##  快速开始
 
 请从左侧边栏选择您想要分析的ETF组合页面，然后：
 
@@ -152,7 +152,7 @@ st.markdown("""
 2. 调整策略参数（动量周期、均线周期等）
 3. 查看分析结果和持仓建议
 
-## 📊 策略说明
+##  策略说明
 
 本系统采用**动量策略**，通过以下步骤进行投资决策：
 
@@ -161,7 +161,7 @@ st.markdown("""
 3. **持仓选择**: 选择动量最强且趋势向上的ETF
 4. **动态调整**: 定期重新计算并调整持仓
 
-## ⚠️ 风险提示
+##  风险提示
 
 - 本系统仅供学习和研究使用，不构成投资建议
 - 投资有风险，入市需谨慎
@@ -170,21 +170,21 @@ st.markdown("""
 
 # 显示系统状态
 st.markdown("---")
-st.markdown("### 🔧 系统状态")
+st.markdown("###  系统状态")
 
 # 检查核心模块
 try:
     from core_strategy import select_etfs
-    st.success("✅ 核心策略模块加载成功")
+    st.success(" 核心策略模块加载成功")
 except ImportError as e:
-    st.error(f"❌ 核心策略模块加载失败: {e}")
+    st.error(f" 核心策略模块加载失败: {e}")
 
 # 检查ETF池配置
 try:
     from etf_pools import ETF_POOLS_CONFIG
-    st.success(f"✅ ETF池配置加载成功 (共{len(ETF_POOLS_CONFIG)}个组合)")
+    st.success(f" ETF池配置加载成功 (共{len(ETF_POOLS_CONFIG)}个组合)")
 except ImportError as e:
-    st.error(f"❌ ETF池配置加载失败: {e}")
+    st.error(f" ETF池配置加载失败: {e}")
 
 # 检查数据缓存
 try:
@@ -192,11 +192,11 @@ try:
     cache_dir = "etf_cache"
     if os.path.exists(cache_dir):
         cache_files = [f for f in os.listdir(cache_dir) if f.endswith('.csv')]
-        st.success(f"✅ 数据缓存可用 (共{len(cache_files)}个ETF数据文件)")
+        st.success(f" 数据缓存可用 (共{len(cache_files)}个ETF数据文件)")
     else:
-        st.warning("⚠️ 数据缓存目录不存在")
+        st.warning(" 数据缓存目录不存在")
 except Exception as e:
-    st.error(f"❌ 数据缓存检查失败: {e}")
+    st.error(f" 数据缓存检查失败: {e}")
 
 # 页脚
 st.markdown("---")

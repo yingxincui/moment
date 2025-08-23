@@ -512,7 +512,7 @@ class PDFReportGenerator:
         # 由于复杂性，暂时返回原始页面
         return page
 
-def create_download_button(pdf_data, filename, button_text="📥 下载PDF报告"):
+def create_download_button(pdf_data, filename, button_text=" 下载PDF报告"):
     """
     创建PDF下载按钮
     
@@ -565,6 +565,6 @@ def generate_and_download_report(etf_pool_name, momentum_results, bias_results,
     # 创建下载按钮
     create_download_button(watermarked_pdf, filename)
     
-    st.success(f"✅ PDF报告生成完成！文件大小: {len(watermarked_pdf)/1024:.1f} KB")
+    st.success(f" PDF报告生成完成！文件大小: {len(watermarked_pdf)/1024:.1f} KB")
     
     return watermarked_pdf, filename

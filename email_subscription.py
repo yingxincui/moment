@@ -165,27 +165,27 @@ class EmailTemplate:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>📊 ETF动量策略日报</h1>
+                    <h1> ETF动量策略日报</h1>
                     <div class="date">{etf_pool_name} - {datetime.now().strftime('%Y年%m月%d日')}</div>
                 </div>
                 
                 <div class="section">
-                    <h2>🎯 今日推荐持仓</h2>
+                    <h2> 今日推荐持仓</h2>
                     {EmailTemplate._render_recommended_holdings(momentum_results)}
                 </div>
                 
                 <div class="section">
-                    <h2>📈 动量排名概览</h2>
+                    <h2> 动量排名概览</h2>
                     {EmailTemplate._render_momentum_overview(momentum_results)}
                 </div>
                 
                 <div class="section">
-                    <h2>🔍 Bias分析汇总</h2>
+                    <h2> Bias分析汇总</h2>
                     {EmailTemplate._render_bias_summary(bias_results)}
                 </div>
                 
                 <div class="section">
-                    <h2>📊 市场表现统计</h2>
+                    <h2> 市场表现统计</h2>
                     {EmailTemplate._render_market_summary(trend_summary)}
                 </div>
                 
@@ -411,7 +411,7 @@ class DailyReportScheduler:
                     )
                     
                     # 发送邮件
-                    subject = f"📊 ETF动量策略日报 - {etf_pool_name} - {datetime.now().strftime('%Y-%m-%d')}"
+                    subject = f" ETF动量策略日报 - {etf_pool_name} - {datetime.now().strftime('%Y-%m-%d')}"
                     
                     if self.email_sender.send_email(email, subject, html_content):
                         self.subscription_manager.update_last_sent(email)
@@ -441,7 +441,7 @@ class DailyReportScheduler:
 
 def render_email_subscription_ui():
     """渲染邮件订阅UI"""
-    st.subheader("📧 邮件订阅管理")
+    st.subheader(" 邮件订阅管理")
     
     # 初始化订阅管理器
     if 'email_subscription_manager' not in st.session_state:
@@ -456,28 +456,28 @@ def render_email_subscription_ui():
         col1, col2 = st.columns(2)
         
         with col1:
-            email = st.text_input("📧 邮箱地址", placeholder="your_email@example.com")
-            frequency = st.selectbox("📅 发送频率", ["daily", "weekly"], 
+            email = st.text_input(" 邮箱地址", placeholder="your_email@example.com")
+            frequency = st.selectbox(" 发送频率", ["daily", "weekly"], 
                                    format_func=lambda x: "每日" if x == "daily" else "每周")
         
         with col2:
             etf_pools = st.multiselect(
-                "📊 ETF组合",
+                " ETF组合",
                 ["默认组合", "科创创业", "全球股市轮动", "明总定制组合"],
                 default=["默认组合"]
             )
         
-        if st.button("✅ 订阅", type="primary"):
+        if st.button(" 订阅", type="primary"):
             if email and etf_pools:
                 if subscription_manager.add_subscription(email, etf_pools, frequency):
-                    st.success(f"✅ 成功订阅！我们将向 {email} 发送 {', '.join(etf_pools)} 的动量分析报告")
+                    st.success(f" 成功订阅！我们将向 {email} 发送 {', '.join(etf_pools)} 的动量分析报告")
                 else:
-                    st.error("❌ 订阅失败，请检查邮箱格式或稍后重试")
+                    st.error(" 订阅失败，请检查邮箱格式或稍后重试")
             else:
-                st.warning("⚠️ 请填写邮箱地址并选择至少一个ETF组合")
+                st.warning(" 请填写邮箱地址并选择至少一个ETF组合")
     
     # 订阅管理
-    st.subheader("📋 当前订阅")
+    st.subheader(" 当前订阅")
     
     active_subscriptions = subscription_manager.get_active_subscriptions()
     
@@ -485,7 +485,7 @@ def render_email_subscription_ui():
         st.info("📭 暂无活跃订阅")
     else:
         for email, data in active_subscriptions.items():
-            with st.expander(f"📧 {email}", expanded=False):
+            with st.expander(f" {email}", expanded=False):
                 col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
                 
                 with col1:
@@ -504,17 +504,17 @@ def render_email_subscription_ui():
                     st.write(f"• {subscribe_date.strftime('%Y-%m-%d')}")
                 
                 with col4:
-                    if st.button("❌ 取消", key=f"cancel_{email}"):
+                    if st.button(" 取消", key=f"cancel_{email}"):
                         if subscription_manager.remove_subscription(email):
-                            st.success("✅ 已取消订阅")
+                            st.success(" 已取消订阅")
                             st.rerun()
                         else:
-                            st.error("❌ 取消失败")
+                            st.error(" 取消失败")
     
     # 邮件配置
     st.subheader("⚙️ 邮件配置")
     
-    with st.expander("🔧 配置发件人邮箱"):
+    with st.expander(" 配置发件人邮箱"):
         st.markdown("""
         **配置说明：**
         1. 使用QQ邮箱作为发件人邮箱
@@ -525,7 +525,7 @@ def render_email_subscription_ui():
         col1, col2 = st.columns(2)
         
         with col1:
-            sender_email = st.text_input("📧 发件人邮箱", 
+            sender_email = st.text_input(" 发件人邮箱", 
                                        value=EMAIL_CONFIG['sender_email'],
                                        placeholder="your_qq@qq.com")
         
@@ -540,12 +540,12 @@ def render_email_subscription_ui():
             EMAIL_CONFIG['sender_password'] = sender_password
             
             # 保存到环境变量或配置文件
-            st.success("✅ 邮件配置已保存")
+            st.success(" 邮件配置已保存")
     
     # 手动发送测试邮件
     st.subheader("🧪 测试邮件")
     
-    test_email = st.text_input("📧 测试邮箱地址", placeholder="test@example.com")
+    test_email = st.text_input(" 测试邮箱地址", placeholder="test@example.com")
     
     if st.button("📤 发送测试邮件"):
         if test_email and EMAIL_CONFIG['sender_email'] and EMAIL_CONFIG['sender_password']:
@@ -564,11 +564,11 @@ def render_email_subscription_ui():
             """.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             
             if email_sender.send_email(test_email, "🧪 ETF动量策略系统测试邮件", test_html):
-                st.success("✅ 测试邮件发送成功！")
+                st.success(" 测试邮件发送成功！")
             else:
-                st.error("❌ 测试邮件发送失败，请检查邮件配置")
+                st.error(" 测试邮件发送失败，请检查邮件配置")
         else:
-            st.warning("⚠️ 请填写测试邮箱地址并确保邮件配置完整")
+            st.warning(" 请填写测试邮箱地址并确保邮件配置完整")
 
 def start_email_scheduler():
     """启动邮件调度器"""
