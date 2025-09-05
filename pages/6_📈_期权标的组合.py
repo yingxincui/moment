@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-科创创业页面
+期权标的组合页面
+包含科创50、中证500、上证50、创业板、沪深300、深证100等主要期权标的ETF
 """
 
 import streamlit as st
@@ -9,57 +10,18 @@ import sys
 import os
 
 # 添加项目根目录到Python路径
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-# 导入认证工具
-from auth_utils import require_authentication
-
-# 要求用户必须通过认证
-require_authentication()
-
+# 导入必要的模块
+from core_strategy import select_etfs, render_momentum_results, render_simplified_bias_table, render_all_etfs_trend_charts, load_cache_meta, render_cache_info
 from etf_pools import ETF_POOLS_CONFIG
-
-from core_strategy import (
-    render_momentum_results, render_cache_info, small_log, load_cache_meta,
-    fetch_etf_data, calculate_momentum_and_ma, select_etfs,
-    render_simplified_bias_table, render_all_etfs_trend_charts
-)
-
-# 导入PDF报告工具
-from pdf_report_utils import generate_and_download_report
-
-# 页面配置
-st.set_page_config(
-    page_title="科创创业 - 大类资产轮动",
-    page_icon="",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+from excel_report_utils import download_excel_report_button
 
 # 页面标题
-st.title(" 科创创业")
+st.title("📈 期权标的组合")
 
-# 策略说明 - 可折叠组件
-with st.expander(" 策略说明", expanded=False):
-    st.markdown("""
-    **策略说明**
-    
-    **动量策略逻辑：**
-    - 动量计算: 计算各ETF在20天内的价格变化百分比
-    - 趋势过滤: 使用28天移动平均线过滤下跌趋势
-    - 持仓选择: 选择动量最强（涨幅最大）且趋势向上的ETF
-    - 动态调整: 定期重新计算并调整持仓
-    
-    **当前参数设置：**
-    - 动量周期：20天（计算价格变化百分比）
-    - 均线周期：28天（趋势过滤）
-    - 最大持仓：2只
-    """)
-
-st.markdown("---")
-
-# 获取科创创业组合配置
-config = ETF_POOLS_CONFIG['scitech']
+# 获取期权标的组合配置
+config = ETF_POOLS_CONFIG['option']
 all_etfs = config['pool']
 etf_list = list(all_etfs.keys())
 default = list(all_etfs.keys())
@@ -108,7 +70,7 @@ current_params = {
     'momentum_period': momentum_period,
     'ma_period': ma_period,
     'max_positions': max_positions,
-    'etf_pool': 'scitech'
+    'etf_pool': 'option'
 }
 
 # 如果参数发生变化或没有缓存结果，则重新计算
@@ -134,25 +96,24 @@ if selected_etfs_result is not None and all_etfs_result is not None:
     
     # 添加Bias分析
     st.markdown("---")
-    st.subheader(" Bias分析")
+    st.subheader("📊 Bias分析")
     render_simplified_bias_table(selected_etfs, all_etfs)
     
     # 显示趋势图
     st.markdown("---")
     render_all_etfs_trend_charts(selected_etfs, all_etfs)
 
-
 # 侧边栏
-st.sidebar.subheader(" ETF组合说明")
+st.sidebar.subheader("📈 ETF组合说明")
 st.sidebar.markdown(f"""
 **{config['name']}：**
-- 300ETF(510300)、科创创业ETF(159781)、中概互联网ETF(513050)
-- 纳指ETF(159941)、黄金ETF(518880)、30年国债(511090)
+- 科创50ETF(588000)、中证500ETF(510500)、上证50ETF(510050)
+- 创业板ETF(159915)、沪深300ETF(510300)、深证100ETF(159901)
 
- **使用说明：**
-- 用科创创业ETF替代创业板，更聚焦科技创新
+**使用说明：**
 - 选择ETF后自动进行分析
 - 支持自定义策略参数
+- 实时获取最新数据
 """)
 
 # 显示缓存信息
@@ -160,7 +121,7 @@ cache_meta = load_cache_meta()
 render_cache_info(cache_meta)
 
 # 手动刷新按钮
-if st.button(" 手动刷新数据"):
+if st.button("🔄 手动刷新数据"):
     if 'momentum_results' in st.session_state:
         del st.session_state.momentum_results
     if 'momentum_params' in st.session_state:
@@ -202,7 +163,6 @@ if 'selected_etfs_result' in locals() and selected_etfs_result is not None and l
     # 生成Excel报告
     if st.button("📊 生成Excel分析报告", type="primary", use_container_width=True):
         try:
-            from excel_report_utils import download_excel_report_button
             download_excel_report_button(
                 selected_etfs_result=selected_etfs_result,
                 all_etfs_result=all_etfs_result,

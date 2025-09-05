@@ -15,6 +15,9 @@ plotly>=5.15.0
 # 其他工具
 python-dateutil>=2.8.0
 
-# PDF报告生成依赖
-reportlab>=4.0.0
-PyPDF2>=3.0.0
+# Excel报告生成依赖
+openpyxl>=3.1.0
+
+# PDF报告生成依赖（已弃用）
+# reportlab>=4.0.0
+# PyPDF2>=3.0.0

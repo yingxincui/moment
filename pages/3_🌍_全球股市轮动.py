@@ -139,7 +139,7 @@ if selected_etfs_result is not None and all_etfs_result is not None:
     
     # 显示趋势图
     st.markdown("---")
-    render_all_etfs_trend_charts(selected_etfs, all_etfs, periods=[6, 12, 24])
+    render_all_etfs_trend_charts(selected_etfs, all_etfs)
 
     # 添加PDF报告下载功能
     st.markdown("---")

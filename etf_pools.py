@@ -48,6 +48,16 @@ GLOBAL_ROTATION_POOL = {
     '159329': '沙特ETF'
 }
 
+# 期权标的组合
+OPTION_UNDERLYING_POOL = {
+    '588000': '科创50ETF',
+    '510500': '中证500ETF',
+    '510050': '上证50ETF',
+    '159915': '创业板ETF',
+    '510300': '沪深300ETF',
+    '159901': '深证100ETF'
+}
+
 # 所有ETF池的配置信息
 ETF_POOLS_CONFIG = {
     'default': {
@@ -73,5 +83,11 @@ ETF_POOLS_CONFIG = {
         'description': '覆盖中美欧日等主要市场，支持全球资产配置',
         'pool': GLOBAL_ROTATION_POOL,
         'icon': '🌍'
+    },
+    'option': {
+        'name': '期权标的组合',
+        'description': '包含科创50、中证500、上证50、创业板、沪深300、深证100等主要期权标的ETF',
+        'pool': OPTION_UNDERLYING_POOL,
+        'icon': '📈'
     }
 }
