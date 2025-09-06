@@ -344,9 +344,9 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
         st.info(f"""
 ** 持仓策略说明：**
 
-• **默认推荐前两名**：系统基于动量策略自动选择动量最强且趋势向上的前2只ETF
-• **缓冲机制**：可以持有前三名，提供一定的缓冲空间
-• **调仓条件**：只有当ETF掉到第四名时才进行调仓
+• **严格推荐前两名**：系统基于动量策略自动选择动量最强且趋势向上的前2只ETF
+• **精选策略**：只推荐动量排名前两位且价格大于均线的ETF
+• **调仓条件**：当排名发生变化时，及时调整到新的前两名
 • **风险控制**：结合价格与均线关系，确保趋势向上
 
 ** 当前推荐标的：**
@@ -354,8 +354,8 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
 
 ** 操作建议：**
 - 当前持仓：{len(selected_etfs_result)}只ETF
-- 建议：可以适当持有第3名ETF作为缓冲
-- 调仓时机：关注排名变化，避免频繁交易
+- 建议：严格按照前两名进行持仓，不持有第三名
+- 调仓时机：关注排名变化，及时调整到新的前两名
         """)
     
     # 显示所有ETF的排名
@@ -363,96 +363,110 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
         st.subheader("所有ETF动量排名")
         # 创建所有ETF的表格
         all_data = []
-        for etf in all_etfs_result:
+        # 获取符合条件的ETF（价格大于均线）
+        qualified_etfs = [etf for etf in all_etfs_result if len(etf) >= 6 and etf[5]]
+        
+        for i, etf in enumerate(all_etfs_result):
             if len(etf) >= 6:
-                status = "推荐" if etf[5] else "不符合条件"
+                # 只有前两名且符合条件的ETF才显示"推荐"
+                if etf in qualified_etfs and qualified_etfs.index(etf) < 2:
+                    status = "✅ 推荐"
+                else:
+                    status = "❌ 不符合条件"
+                
+                # 计算Bias分析结论
+                bias_conclusion = "数据不足"
+                rsi_conclusion = "数据不足"
+                drawdown_28ma = "数据不足"
+                try:
+                    etf_code = etf[0]
+                    df = fetch_etf_data(etf_code)
+                    if not df.empty:
+                        # 计算Bias分析
+                        bias_data = calculate_bias_analysis(df, [6, 12, 24])
+                        if bias_data and 'BIAS_6' in bias_data and 'BIAS_12' in bias_data and 'BIAS_24' in bias_data:
+                            bias_6 = bias_data['BIAS_6'].iloc[-1] if not bias_data['BIAS_6'].empty else 0
+                            bias_12 = bias_data['BIAS_12'].iloc[-1] if not bias_data['BIAS_12'].empty else 0
+                            bias_24 = bias_data['BIAS_24'].iloc[-1] if not bias_data['BIAS_24'].empty else 0
+                            bias_conclusion, _ = get_bias_conclusion(bias_6, bias_12, bias_24)
+                        
+                        # 计算RSI分析
+                        rsi = calculate_rsi(df['Close'], period=14)
+                        if not rsi.empty and not pd.isna(rsi.iloc[-1]):
+                            rsi_value = rsi.iloc[-1]
+                            rsi_conclusion, _ = get_rsi_conclusion(rsi_value)
+                        
+                        # 计算28日均线止损回撤
+                        current_price = etf[2]  # 当前价格
+                        ma_28_price = etf[3]    # 28日均线价格
+                        if current_price > ma_28_price:
+                            # 如果当前价格高于均线，计算回撤幅度
+                            drawdown_pct = ((current_price - ma_28_price) / current_price) * 100
+                            drawdown_28ma = f"{drawdown_pct:.2f}%"
+                        else:
+                            # 如果当前价格低于均线，显示已跌破
+                            drawdown_28ma = "已跌破"
+                except:
+                    pass
+                
                 all_data.append({
                     'ETF代码': etf[0],
                     'ETF名称': etf[1],
                     '当前价格': f"{etf[2]:.4f}",
                     '均线价格': f"{etf[3]:.4f}",
                     '动量': f"{etf[4]*100:.2f}%",
+                    'Bias结论': bias_conclusion,
+                    'RSI结论': rsi_conclusion,
+                    '28日均线止损回撤': drawdown_28ma,
                     '状态': status
                 })
         
         if all_data:
             all_df = pd.DataFrame(all_data)
             
-            # 美化表格显示
-            def style_momentum_table(df):
-                """美化动量排名表格"""
-                
-                def color_momentum_values(val):
-                    """为动量值添加颜色"""
-                    if isinstance(val, str) and '%' in val:
-                        try:
-                            momentum_value = float(val.rstrip('%'))
-                            if momentum_value > 5:
-                                return 'background-color: #ffebee; color: #c62828; font-weight: bold; border-radius: 4px; padding: 4px 8px;'  # 超强动量：深红色
-                            elif momentum_value > 2:
-                                return 'background-color: #ffcdd2; color: #b71c1c; font-weight: bold; border-radius: 4px; padding: 4px 8px;'  # 强动量：红色
-                            elif momentum_value > 0:
-                                return 'background-color: #fff3e0; color: #ef6c00; font-weight: bold; border-radius: 4px; padding: 4px 8px;'  # 正动量：橙色
-                            elif momentum_value > -2:
-                                return 'background-color: #f5f5f5; color: #424242; font-weight: bold; border-radius: 4px; padding: 4px 8px;'  # 轻微负动量：灰色
-                            elif momentum_value > -5:
-                                return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold; border-radius: 4px; padding: 4px 8px;'  # 负动量：绿色
-                            else:
-                                return 'background-color: #c8e6c9; color: #1b5e20; font-weight: bold; border-radius: 4px; padding: 4px 8px;'  # 强负动量：深绿色
-                        except:
-                            return ''
-                    return ''
-                
-                def color_status_values(val):
-                    """为状态值添加颜色"""
-                    if isinstance(val, str):
-                        if '推荐' in val:
-                            return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold; border-radius: 4px; padding: 4px 8px; border: 2px solid #4caf50;'
-                        elif '不符合条件' in val:
-                            return 'background-color: #ffebee; color: #c62828; font-weight: bold; border-radius: 4px; padding: 4px 8px; border: 2px solid #f44336;'
-                    return ''
-                
-                def color_price_values(val):
-                    """为价格值添加颜色"""
-                    if isinstance(val, str) and '.' in val:
-                        return 'background-color: #f8f9fa; color: #495057; font-weight: 500; font-family: "Courier New", monospace; border-radius: 4px; padding: 4px 8px;'
-                    return ''
-                
-                # 应用样式到不同列
-                styled_df = df.style.map(color_momentum_values, subset=['动量'])
-                styled_df = styled_df.map(color_status_values, subset=['状态'])
-                styled_df = styled_df.map(color_price_values, subset=['当前价格', '均线价格'])
-                
-                # 为ETF代码和名称添加样式
-                styled_df = styled_df.apply(lambda x: [
-                    'background-color: #e3f2fd; color: #1565c0; font-weight: bold; border-radius: 4px; padding: 4px 8px;' if col == 'ETF代码' else
-                    'background-color: #f3e5f5; color: #7b1fa2; font-weight: bold; border-radius: 4px; padding: 4px 8px;' if col == 'ETF名称' else
-                    '' for col in df.columns
-                ], axis=0)
-                
-                return styled_df
+            # 显示表格（简化样式处理）
+            st.dataframe(all_df, use_container_width=True)
             
-            # 应用美化样式
-            styled_all_df = style_momentum_table(all_df)
-            
-            # 显示美化后的表格
-            st.dataframe(styled_all_df, use_container_width=True)
-            
-            # 添加表格说明
-            st.markdown("""
-            <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-top: 15px;'>
-                <strong>动量排名表格说明：</strong><br>
-                <strong>动量颜色含义：</strong><br>
-                • <span style='color: #c62828;'>深红色</span>：超强动量（>5%）<br>
-                • <span style='color: #b71c1c;'>红色</span>：强动量（2-5%）<br>
-                • <span style='color: #ef6c00;'>橙色</span>：正动量（0-2%）<br>
-                • <span style='color: #424242;'>灰色</span>：轻微负动量（-2% 到 0%）<br>
-                • <span style='color: #2e7d32;'>绿色</span>：负动量（-5% 到 -2%）<br>
-                • <span style='color: #1b5e20;'>深绿色</span>：强负动量（<-5%）<br>
-                <br>
-                <strong>状态说明：</strong>推荐 = 符合动量策略条件，不符合条件 = 不满足策略要求
-            </div>
-            """, unsafe_allow_html=True)
+            # 添加表格说明（默认折叠）
+            with st.expander("📊 动量排名表格说明", expanded=False):
+                st.markdown("""
+                <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;'>
+                    <strong>动量颜色含义：</strong><br>
+                    • <span style='color: #c62828;'>深红色</span>：超强动量（>5%）<br>
+                    • <span style='color: #b71c1c;'>红色</span>：强动量（2-5%）<br>
+                    • <span style='color: #ef6c00;'>橙色</span>：正动量（0-2%）<br>
+                    • <span style='color: #424242;'>灰色</span>：轻微负动量（-2% 到 0%）<br>
+                    • <span style='color: #2e7d32;'>绿色</span>：负动量（-5% 到 -2%）<br>
+                    • <span style='color: #1b5e20;'>深绿色</span>：强负动量（<-5%）<br>
+                    <br>
+                    <strong>Bias结论含义：</strong><br>
+                    • <span style='color: #c62828;'>🔴 中长线超买</span>：24日BIAS > +9%<br>
+                    • <span style='color: #c62828;'>🟠 中线超买</span>：12日BIAS > +5%<br>
+                    • <span style='color: #ef6c00;'>🟡 短线超买</span>：6日BIAS > +3.5%<br>
+                    • <span style='color: #1565c0;'>✅ 正常</span>：所有BIAS在正常范围内<br>
+                    • <span style='color: #2196f3;'>🔵 短线超卖</span>：6日BIAS < -3.5%<br>
+                    • <span style='color: #7b1fa2;'>🟣 中线超卖</span>：12日BIAS < -5%<br>
+                    • <span style='color: #2e7d32;'>🟢 中长线超卖</span>：24日BIAS < -9%<br>
+                    • <span style='color: #757575;'>❓ 数据异常</span>：计算失败<br>
+                    <br>
+                    <strong>RSI结论含义：</strong><br>
+                    • <span style='color: #c62828;'>🔴 超买区</span>：RSI > 70（可考虑卖出）<br>
+                    • <span style='color: #ef6c00;'>🟡 偏多</span>：RSI > 50（整体动量偏多）<br>
+                    • <span style='color: #1565c0;'>⚖️ 中性</span>：RSI = 50（多空分界线）<br>
+                    • <span style='color: #2196f3;'>🔵 偏空</span>：RSI < 50（整体动量偏空）<br>
+                    • <span style='color: #2e7d32;'>🟢 超卖区</span>：RSI < 30（可考虑买入）<br>
+                    • <span style='color: #757575;'>❓ 数据不足</span>：计算失败<br>
+                    <br>
+                    <strong>28日均线止损回撤：</strong><br>
+                    • 显示当前价格相对于28日均线的回撤幅度<br>
+                    • 数值越小表示止损空间越小，风险相对较低<br>
+                    • "已跌破"表示当前价格已低于28日均线<br>
+                    <br>
+                    <strong>状态说明：</strong>✅ 推荐 = 符合动量策略条件，❌ 不符合条件 = 不满足策略要求<br>
+                    <br>
+                    <strong>⚠️ 重要提示：</strong>超买超卖仅提示谨慎高位加仓，操作依据动量数据为主
+                </div>
+                """, unsafe_allow_html=True)
             
             # 显示动量排名图
             st.subheader("动量排名图")
@@ -962,6 +976,65 @@ def calculate_dynamic_threshold(bias_values, multiplier=2.0):
     
     return mean_bias + multiplier * std_bias
 
+def calculate_rsi(prices, period=14):
+    """
+    计算RSI指标
+    
+    Args:
+        prices: 价格序列
+        period: RSI计算周期，默认14
+    
+    Returns:
+        rsi: RSI值序列
+    """
+    if len(prices) < period + 1:
+        return pd.Series([np.nan] * len(prices), index=prices.index)
+    
+    # 计算价格变化
+    delta = prices.diff()
+    
+    # 分离上涨和下跌
+    gain = delta.where(delta > 0, 0)
+    loss = -delta.where(delta < 0, 0)
+    
+    # 计算平均收益和平均损失
+    avg_gain = gain.rolling(window=period).mean()
+    avg_loss = loss.rolling(window=period).mean()
+    
+    # 计算RSI
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    
+    return rsi
+
+def get_rsi_conclusion(rsi_value):
+    """
+    获取RSI分析结论
+    
+    Args:
+        rsi_value: RSI值
+    
+    Returns:
+        conclusion: RSI分析结论
+    """
+    try:
+        if pd.isna(rsi_value):
+            return "❓ 数据不足", "info"
+        
+        if rsi_value > 70:
+            return f"🔴 超买区 (RSI:{rsi_value:.1f}>70)", "danger"
+        elif rsi_value < 30:
+            return f"🟢 超卖区 (RSI:{rsi_value:.1f}<30)", "success"
+        elif rsi_value > 50:
+            return f"🟡 偏多 (RSI:{rsi_value:.1f}>50)", "warning"
+        elif rsi_value < 50:
+            return f"🔵 偏空 (RSI:{rsi_value:.1f}<50)", "warning"
+        else:
+            return f"⚖️ 中性 (RSI:{rsi_value:.1f}=50)", "info"
+            
+    except:
+        return "❓ 计算异常", "info"
+
 def calculate_bias(df, period=6):
     """
     计算偏离度 (BIAS)
@@ -1239,14 +1312,16 @@ def render_simplified_bias_table(etf_list, etf_names, periods=[6, 12, 24]):
         st.markdown("""
         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-top: 15px;'>
             <strong> Bias分析说明：</strong><br>
-            <strong>偏离度颜色含义：</strong><br>
-            • <span style='color: #c62828;'> 深红色</span>：超买（>5%）<br>
-            • <span style='color: #ef6c00;'> 橙色</span>：偏超买（2-5%）<br>
-            • <span style='color: #424242;'> 灰色</span>：正常（-2% 到 2%）<br>
-            • <span style='color: #7b1fa2;'>🟣 紫色</span>：偏超卖（-5% 到 -2%）<br>
-            • <span style='color: #2e7d32;'> 深绿色</span>：超卖（<-5%）<br>
+            <strong>偏离度阈值标准：</strong><br>
+            • <span style='color: #c62828;'>🔴 中长线超买</span>：24日BIAS > +9%<br>
+            • <span style='color: #c62828;'>🟠 中线超买</span>：12日BIAS > +5%<br>
+            • <span style='color: #ef6c00;'>🟡 短线超买</span>：6日BIAS > +3.5%<br>
+            • <span style='color: #1565c0;'>✅ 正常</span>：所有BIAS在正常范围内<br>
+            • <span style='color: #2196f3;'>🔵 短线超卖</span>：6日BIAS < -3.5%<br>
+            • <span style='color: #7b1fa2;'>🟣 中线超卖</span>：12日BIAS < -5%<br>
+            • <span style='color: #2e7d32;'>🟢 中长线超卖</span>：24日BIAS < -9%<br>
             <br>
-            <strong>超买超卖结论：</strong>基于6日、12日、24日偏离度的综合判断
+            <strong>投资建议：</strong>短线超买可考虑卖出，短线超卖可考虑买入
         </div>
         """, unsafe_allow_html=True)
         
@@ -1312,9 +1387,52 @@ def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_
         st.subheader(" 所有ETF动量排名")
         # 创建所有ETF的表格
         all_data = []
-        for etf in all_etfs_result:
+        # 获取符合条件的ETF（价格大于均线）
+        qualified_etfs = [etf for etf in all_etfs_result if len(etf) >= 6 and etf[5]]
+        
+        for i, etf in enumerate(all_etfs_result):
             if len(etf) >= 6:
-                status = " 推荐" if etf[5] else " 不符合条件"
+                # 只有前两名且符合条件的ETF才显示"推荐"
+                if etf in qualified_etfs and qualified_etfs.index(etf) < 2:
+                    status = "✅ 推荐"
+                else:
+                    status = "❌ 不符合条件"
+                
+                # 计算Bias分析结论
+                bias_conclusion = "数据不足"
+                rsi_conclusion = "数据不足"
+                drawdown_28ma = "数据不足"
+                try:
+                    etf_code = etf[0]
+                    df = fetch_etf_data(etf_code)
+                    if not df.empty:
+                        # 计算Bias分析
+                        bias_data = calculate_bias_analysis(df, [6, 12, 24])
+                        if bias_data and 'BIAS_6' in bias_data and 'BIAS_12' in bias_data and 'BIAS_24' in bias_data:
+                            bias_6 = bias_data['BIAS_6'].iloc[-1] if not bias_data['BIAS_6'].empty else 0
+                            bias_12 = bias_data['BIAS_12'].iloc[-1] if not bias_data['BIAS_12'].empty else 0
+                            bias_24 = bias_data['BIAS_24'].iloc[-1] if not bias_data['BIAS_24'].empty else 0
+                            bias_conclusion, _ = get_bias_conclusion(bias_6, bias_12, bias_24)
+                        
+                        # 计算RSI分析
+                        rsi = calculate_rsi(df['Close'], period=14)
+                        if not rsi.empty and not pd.isna(rsi.iloc[-1]):
+                            rsi_value = rsi.iloc[-1]
+                            rsi_conclusion, _ = get_rsi_conclusion(rsi_value)
+                        
+                        # 计算28日均线止损回撤
+                        current_price = etf[2]  # 当前价格
+                        ma_28_price = etf[3]    # 28日均线价格
+                        if current_price > ma_28_price:
+                            # 如果当前价格高于均线，计算回撤幅度
+                            drawdown_pct = ((current_price - ma_28_price) / current_price) * 100
+                            drawdown_28ma = f"{drawdown_pct:.2f}%"
+                        else:
+                            # 如果当前价格低于均线，显示已跌破
+                            drawdown_28ma = "已跌破"
+                except:
+                    pass
+                
                 all_data.append({
                     'ETF代码': etf[0],
                     'ETF名称': etf[1],
@@ -1322,6 +1440,9 @@ def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_
                     '均线价格': f"{etf[3]:.4f}",
                     '动量': f"{etf[4]*100:.2f}%",
                     '价格-均线': f"{etf[2] - etf[3]:.4f}",
+                    'Bias结论': bias_conclusion,
+                    'RSI结论': rsi_conclusion,
+                    '28日均线止损回撤': drawdown_28ma,
                     '状态': status
                 })
         
@@ -1375,34 +1496,39 @@ def get_bias_conclusion(bias_6, bias_12, bias_24):
         conclusion: 超买超卖结论
     """
     try:
-        # 使用动态阈值判断
-        # 计算动态阈值（基于历史数据，这里使用固定阈值作为示例）
-        upper_6, upper_12, upper_24 = 5.0, 3.0, 2.0  # 超买阈值
-        lower_6, lower_12, lower_24 = -5.0, -3.0, -2.0  # 超卖阈值
+        # 使用新的阈值标准
+        # BIAS(6) > +3.5%：视为短线超买
+        # BIAS(6) < -3.5%：视为短线超卖
+        # BIAS(12) > +5%：视为中线超买
+        # BIAS(12) < -5%：视为中线超卖
+        # BIAS(24) > +9%：视为中长线超买
+        # BIAS(24) < -9%：视为中长线超卖
         
-        if bias_6 > upper_6 and bias_12 > upper_12 and bias_24 > upper_24:
-            return f" 超买 (6日:{bias_6:.1f}%>{upper_6:.1f}%)", "danger"
-        elif bias_6 < lower_6 and bias_12 < lower_12 and bias_24 < lower_24:
-            return f" 超卖 (6日:{bias_6:.1f}%<{lower_6:.1f}%)", "success"
-        elif bias_6 > upper_6 * 0.8 or bias_12 > upper_12 * 0.8:
-            return f"🟡 偏超买 (6日:{bias_6:.1f}%)", "warning"
-        elif bias_6 < lower_6 * 0.8 or bias_12 < lower_12 * 0.8:
-            return f" 偏超卖 (6日:{bias_6:.1f}%)", "warning"
+        # 检查中长线超买超卖（优先级最高）
+        if bias_24 > 9:
+            return f"🔴 中长线超买 (24日:{bias_24:.1f}%>9%)", "danger"
+        elif bias_24 < -9:
+            return f"🟢 中长线超卖 (24日:{bias_24:.1f}%<-9%)", "success"
+        
+        # 检查中线超买超卖
+        elif bias_12 > 5:
+            return f"🟠 中线超买 (12日:{bias_12:.1f}%>5%)", "danger"
+        elif bias_12 < -5:
+            return f"🟣 中线超卖 (12日:{bias_12:.1f}%<-5%)", "success"
+        
+        # 检查短线超买超卖
+        elif bias_6 > 3.5:
+            return f"🟡 短线超买 (6日:{bias_6:.1f}%>3.5%)", "warning"
+        elif bias_6 < -3.5:
+            return f"🔵 短线超卖 (6日:{bias_6:.1f}%<-3.5%)", "warning"
+        
+        # 正常范围
         else:
-            return f" 正常 (6日:{bias_6:.1f}%)", "info"
+            return f"✅ 正常 (6日:{bias_6:.1f}%)", "info"
             
     except:
-        # 如果动态计算失败，使用传统固定阈值
-        if bias_6 > 5 and bias_12 > 3 and bias_24 > 2:
-            return " 超买", "danger"
-        elif bias_6 < -5 and bias_12 < -3 and bias_24 < -2:
-            return " 超卖", "success"
-        elif bias_6 > 3 or bias_12 > 2:
-            return "🟡 偏超买", "warning"
-        elif bias_6 < -3 or bias_12 < -2:
-            return " 偏超卖", "warning"
-        else:
-            return " 正常", "info"
+        # 如果计算失败，返回默认值
+        return "❓ 数据异常", "info"
 
 def show_bias_statistics(bias_results):
     """

@@ -19,19 +19,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# 导入认证工具
+from auth_utils import check_authentication, set_authentication, clear_auth_session, get_remaining_time
+
 # 暗号验证
 SECRET_CODE = "xldl"
 
-# 检查是否已经通过暗号验证
-if 'authenticated' not in st.session_state:
-    st.session_state.authenticated = False
-
-# 添加时间戳验证，防止会话劫持
-if 'auth_timestamp' not in st.session_state:
-    st.session_state.auth_timestamp = None
-
-# 如果未通过验证，显示暗号输入界面
-if not st.session_state.authenticated:
+# 检查是否已经通过暗号验证（支持一天缓存）
+if not check_authentication():
     st.title("🔐 ETF动量策略分析系统")
     st.markdown("---")
     
@@ -58,14 +53,12 @@ if not st.session_state.authenticated:
         # 验证按钮
         if st.button("🔓 验证暗号", type="primary", use_container_width=True):
             if secret_input == SECRET_CODE:
-                st.session_state.authenticated = True
-                st.session_state.auth_timestamp = st.session_state.get('_session_id', 'unknown')
+                set_authentication()
                 st.success(" 暗号验证成功！正在进入系统...")
                 st.rerun()
             else:
                 st.error(" 暗号错误，请重新输入！")
-                st.session_state.authenticated = False
-                st.session_state.auth_timestamp = None
+                clear_auth_session()
         
         # 提示信息
         st.info(" 提示：请输入暗号验证身份")
@@ -81,17 +74,11 @@ if not st.session_state.authenticated:
     # 阻止继续执行
     st.stop()
 
-# 验证通过后的额外安全检查
-if st.session_state.authenticated:
-    # 检查会话ID是否匹配（防止会话劫持）
-    current_session_id = st.session_state.get('_session_id', 'unknown')
-    if st.session_state.auth_timestamp != current_session_id:
-        st.error("🔐 会话验证失败！请重新登录。")
-        st.session_state.authenticated = False
-        st.session_state.auth_timestamp = None
-        st.rerun()
-    
-    # 可以在这里添加其他安全检查，比如IP验证、时间限制等
+# 验证通过后的额外安全检查（已在check_authentication中处理）
+# 显示认证状态信息
+remaining_time = get_remaining_time()
+if remaining_time:
+    st.sidebar.success(f"🔐 认证有效，剩余时间：{remaining_time}")
 
 # 暗号验证通过后的逻辑
 # 检查是否已经重定向
@@ -122,10 +109,7 @@ col1, col2, col3 = st.columns([3, 1, 1])
 with col3:
     if st.button("🚪 登出", type="secondary"):
         # 清除认证状态
-        if 'authenticated' in st.session_state:
-            del st.session_state.authenticated
-        if 'auth_timestamp' in st.session_state:
-            del st.session_state.auth_timestamp
+        clear_auth_session()
         if 'redirected_to_default' in st.session_state:
             del st.session_state.redirected_to_default
         st.success(" 已安全登出！")

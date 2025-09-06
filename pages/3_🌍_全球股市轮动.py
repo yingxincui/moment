@@ -25,8 +25,7 @@ from core_strategy import (
     render_simplified_bias_table, render_all_etfs_trend_charts
 )
 
-# 导入PDF报告工具
-from pdf_report_utils import generate_and_download_report
+# 已改为使用Excel报告工具，不再需要PDF报告工具
 
 # 页面配置
 st.set_page_config(
@@ -141,9 +140,9 @@ if selected_etfs_result is not None and all_etfs_result is not None:
     st.markdown("---")
     render_all_etfs_trend_charts(selected_etfs, all_etfs)
 
-    # 添加PDF报告下载功能
+    # 添加Excel报告下载功能
     st.markdown("---")
-    st.subheader(" PDF报告下载")
+    st.subheader("📊 Excel报告下载")
 
     # 检查是否有分析结果
     if 'selected_etfs_result' in locals() and selected_etfs_result is not None and len(selected_etfs_result) > 0:
@@ -173,21 +172,24 @@ if selected_etfs_result is not None and all_etfs_result is not None:
         if 'selected_etfs_result' in locals() and selected_etfs_result:
             selected_etfs_list = selected_etfs_result
         
-        # 生成PDF报告
-        if st.button("�� 生成PDF分析报告", type="primary", use_container_width=True):
+        # 生成Excel报告
+        if st.button("📊 生成Excel分析报告", type="primary", use_container_width=True):
             try:
-                generate_and_download_report(
-                    etf_pool_name=etf_pool_name,
-                    momentum_results=selected_etfs_result,
-                    bias_results=bias_results,
-                    trend_summary=trend_summary,
-                    selected_etfs=selected_etfs_list
+                from excel_report_utils import download_excel_report_button
+                download_excel_report_button(
+                    selected_etfs_result=selected_etfs_result,
+                    all_etfs_result=all_etfs_result,
+                    etf_pool=all_etfs,
+                    momentum_period=momentum_period,
+                    ma_period=ma_period,
+                    max_positions=max_positions,
+                    button_text="📊 下载Excel分析报告"
                 )
             except Exception as e:
-                st.error(f"生成PDF报告失败: {e}")
-                st.info("请确保已安装所需的依赖包：pip install reportlab")
+                st.error(f"生成Excel报告失败: {e}")
+                st.info("请确保已安装所需的依赖包：pip install openpyxl")
     else:
-        st.info("请先进行动量分析，然后才能生成PDF报告")
+        st.info("请先进行动量分析，然后才能生成Excel报告")
 
 
 # 侧边栏

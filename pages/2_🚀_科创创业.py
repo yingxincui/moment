@@ -25,8 +25,7 @@ from core_strategy import (
     render_simplified_bias_table, render_all_etfs_trend_charts
 )
 
-# 导入PDF报告工具
-from pdf_report_utils import generate_and_download_report
+# 已改为使用Excel报告工具，不再需要PDF报告工具
 
 # 页面配置
 st.set_page_config(

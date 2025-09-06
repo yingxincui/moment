@@ -231,18 +231,36 @@ class ExcelReportGenerator:
             if line.strip():
                 current_row = self.add_text_content(line.strip(), current_row)
         
-        # 调整列宽
-        for column in self.ws.columns:
-            max_length = 0
-            column_letter = column[0].column_letter
-            for cell in column:
+        # 调整列宽 - 更安全的方法
+        try:
+            # 获取所有列的范围
+            max_col = self.ws.max_column
+            for col_idx in range(1, max_col + 1):
+                max_length = 0
+                column_letter = self.ws.cell(row=1, column=col_idx).column_letter
+                
+                # 遍历该列的所有单元格
+                for row_idx in range(1, self.ws.max_row + 1):
+                    cell = self.ws.cell(row=row_idx, column=col_idx)
+                    try:
+                        if cell.value is not None:
+                            cell_length = len(str(cell.value))
+                            if cell_length > max_length:
+                                max_length = cell_length
+                    except:
+                        pass
+                
+                # 设置列宽，确保最小宽度为10
+                adjusted_width = max(min(max_length + 2, 50), 10)
+                self.ws.column_dimensions[column_letter].width = adjusted_width
+        except Exception as e:
+            # 如果列宽调整失败，设置默认列宽
+            for col_idx in range(1, 8):  # 设置前8列的默认宽度
                 try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
+                    column_letter = self.ws.cell(row=1, column=col_idx).column_letter
+                    self.ws.column_dimensions[column_letter].width = 15
                 except:
                     pass
-            adjusted_width = min(max_length + 2, 50)
-            self.ws.column_dimensions[column_letter].width = adjusted_width
         
         return self.wb
     
