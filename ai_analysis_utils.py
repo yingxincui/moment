@@ -9,7 +9,7 @@ import streamlit as st
 import pandas as pd
 import json
 from datetime import datetime
-import pyperclip
+import clipboard
 
 def format_data_for_ai(data, data_type="momentum_results"):
     """
@@ -290,16 +290,78 @@ def render_compact_ai_button(data, data_type="momentum_results", key_suffix=""):
     button_key = f"compact_ai_{data_type}_{key_suffix}"
     
     # 使用小按钮
-    if st.button("🤖 AI分析", key=button_key, type="secondary", help="点击复制数据给AI分析"):
+    if st.button("🤖 AI分析", key=button_key, type="secondary", help="点击自动复制数据给AI分析"):
         try:
-            pyperclip.copy(full_text)
-            st.toast("✅ 数据已复制到剪贴板！", icon="✅")
+            # 使用clipboard库复制到剪贴板
+            clipboard.copy(full_text)
+            st.toast("✅ 数据已自动复制到剪贴板！", icon="✅")
+            
+            # 显示数据预览（可选）
+            with st.expander("📋 查看复制的数据", expanded=False):
+                st.text_area(
+                    "AI分析数据:", 
+                    value=full_text, 
+                    height=300, 
+                    key=f"ai_data_preview_{key_suffix}",
+                    help="数据已复制到剪贴板，可直接粘贴到AI助手"
+                )
+            
+            # 添加使用提示
+            st.info("💡 **使用方法**: 数据已复制到剪贴板，直接粘贴到AI助手即可开始分析")
+            
         except Exception as e:
-            st.toast(f"❌ 复制失败: {e}", icon="❌")
-            # 如果复制失败，在侧边栏显示数据供手动复制
-            with st.sidebar:
-                st.error("复制失败，请手动复制以下数据:")
-                st.text_area("数据内容:", value=full_text, height=200, key=f"manual_copy_{key_suffix}")
+            # 如果clipboard失败，使用JavaScript备用方案
+            st.toast("⚠️ 自动复制失败，使用备用方案", icon="⚠️")
+            
+            # 处理特殊字符，避免JavaScript错误
+            safe_text = full_text.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$').replace('\n', '\\n').replace('\r', '\\r')
+            
+            st.markdown(f"""
+            <script>
+            function copyToClipboard() {{
+                const text = `{safe_text}`;
+                if (navigator.clipboard && window.isSecureContext) {{
+                    navigator.clipboard.writeText(text).then(function() {{
+                        console.log('数据已复制到剪贴板');
+                    }}, function(err) {{
+                        console.error('复制失败: ', err);
+                        fallbackCopy(text);
+                    }});
+                }} else {{
+                    fallbackCopy(text);
+                }}
+            }}
+            
+            function fallbackCopy(text) {{
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {{
+                    document.execCommand('copy');
+                    console.log('备用复制成功');
+                }} catch (err) {{
+                    console.error('备用复制失败: ', err);
+                }}
+                document.body.removeChild(textArea);
+            }}
+            
+            copyToClipboard();
+            </script>
+            """, unsafe_allow_html=True)
+            
+            # 显示手动复制选项
+            st.text_area(
+                "如果自动复制失败，请手动复制以下数据:", 
+                value=full_text, 
+                height=300, 
+                key=f"manual_copy_{key_suffix}",
+                help="选中所有内容后按Ctrl+C复制"
+            )
 
 
 def get_ai_analysis_prompt(data_type="momentum_results"):
