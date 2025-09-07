@@ -289,13 +289,8 @@ def render_compact_ai_button(data, data_type="momentum_results", key_suffix=""):
     # 创建紧凑按钮
     button_key = f"compact_ai_{data_type}_{key_suffix}"
     
-    # 使用小按钮
-    if st.button("🤖 AI分析", key=button_key, type="secondary", help="点击自动复制数据给AI分析"):
-        # 使用st_copy_to_clipboard函数直接复制
-        st_copy_to_clipboard(full_text)
-        
-        # 显示成功提示
-        st.toast("✅ 数据已自动复制到剪贴板！", icon="✅")
+    # 直接显示st_copy_to_clipboard的复制按钮
+    st_copy_to_clipboard(full_text)
 
 
 def get_ai_analysis_prompt(data_type="momentum_results"):

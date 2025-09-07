@@ -13,9 +13,9 @@
       "momentum_period": 20,
       "ma_period": 28
     },
-    "created_at": "2025-09-07T23:36:19.147197",
+    "created_at": "2025-09-08T01:12:39.809746",
     "data_type": "dict",
-    "file_size": 730
+    "file_size": 1108
   },
   "mingzong_70f2fc0dbb6b8cd66d5c966a5d08179d": {
     "page_name": "mingzong",
@@ -69,9 +69,9 @@
       "momentum_period": 20,
       "ma_period": 28
     },
-    "created_at": "2025-09-07T23:37:12.964966",
+    "created_at": "2025-09-08T01:13:11.030008",
     "data_type": "dict",
-    "file_size": 722
+    "file_size": 1101
   },
   "global_a7e253f5da21b1f1d694944bd364b0f4": {
     "page_name": "global",
@@ -88,8 +88,56 @@
       "momentum_period": 20,
       "ma_period": 28
     },
-    "created_at": "2025-09-08T00:05:29.812036",
+    "created_at": "2025-09-08T01:12:40.652442",
     "data_type": "dict",
-    "file_size": 814
+    "file_size": 1235
+  },
+  "test_page_15696219408cfa0654fe7154516fd90e": {
+    "page_name": "test_page",
+    "params": {
+      "selected_etfs_result": [
+        [
+          "510300",
+          "300ETF",
+          4.5,
+          4.2,
+          0.05
+        ],
+        [
+          "510500",
+          "中证500ETF",
+          6.8,
+          6.5,
+          0.03
+        ]
+      ],
+      "all_etfs_result": [
+        [
+          "510300",
+          "300ETF",
+          4.5,
+          4.2,
+          0.05,
+          true
+        ],
+        [
+          "510500",
+          "中证500ETF",
+          6.8,
+          6.5,
+          0.03,
+          true
+        ]
+      ],
+      "strategy_params": {
+        "momentum_period": 20,
+        "ma_period": 28,
+        "max_positions": 2
+      },
+      "page_name": "default"
+    },
+    "created_at": "2025-09-08T01:12:27.940794",
+    "data_type": "dict",
+    "file_size": 575
   }
 }

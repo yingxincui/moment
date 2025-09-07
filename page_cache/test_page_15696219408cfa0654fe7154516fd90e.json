@@ -1,0 +1,42 @@
+{
+  "selected_etfs_result": [
+    [
+      "510300",
+      "300ETF",
+      4.5,
+      4.2,
+      0.05
+    ],
+    [
+      "510500",
+      "中证500ETF",
+      6.8,
+      6.5,
+      0.03
+    ]
+  ],
+  "all_etfs_result": [
+    [
+      "510300",
+      "300ETF",
+      4.5,
+      4.2,
+      0.05,
+      true
+    ],
+    [
+      "510500",
+      "中证500ETF",
+      6.8,
+      6.5,
+      0.03,
+      true
+    ]
+  ],
+  "strategy_params": {
+    "momentum_period": 20,
+    "ma_period": 28,
+    "max_positions": 2
+  },
+  "page_name": "default"
+}

@@ -11,12 +11,37 @@ import os
 import hashlib
 from datetime import datetime, timedelta
 import pandas as pd
-import pickle
 
 # 缓存配置
 CACHE_DIR = "page_cache"
 CACHE_DURATION_HOURS = 24  # 缓存24小时
 CACHE_META_FILE = "cache_meta.json"
+
+def convert_to_json_serializable(data):
+    """
+    将数据转换为JSON可序列化格式
+    
+    Args:
+        data: 要转换的数据
+    
+    Returns:
+        json_data: JSON可序列化的数据
+    """
+    if isinstance(data, (list, tuple)):
+        return [convert_to_json_serializable(item) for item in data]
+    elif isinstance(data, dict):
+        return {key: convert_to_json_serializable(value) for key, value in data.items()}
+    elif hasattr(data, 'to_dict'):  # pandas DataFrame
+        return data.to_dict('records')
+    elif hasattr(data, 'tolist'):  # numpy array
+        return data.tolist()
+    elif hasattr(data, 'item'):  # numpy scalar
+        return data.item()
+    elif isinstance(data, (int, float, str, bool, type(None))):
+        return data
+    else:
+        # 对于其他类型，尝试转换为字符串
+        return str(data)
 
 def ensure_cache_dir():
     """确保缓存目录存在"""
@@ -43,7 +68,7 @@ def get_cache_key(page_name, params):
 def get_cache_file_path(cache_key):
     """获取缓存文件路径"""
     ensure_cache_dir()
-    return os.path.join(CACHE_DIR, f"{cache_key}.pkl")
+    return os.path.join(CACHE_DIR, f"{cache_key}.json")
 
 def get_cache_meta_file_path():
     """获取缓存元数据文件路径"""
@@ -87,9 +112,16 @@ def is_cache_valid(cache_key):
     
     cache_info = meta_data[cache_key]
     cache_time = datetime.fromisoformat(cache_info['created_at'])
+    current_time = datetime.now()
     
     # 检查是否超过缓存时间
-    if datetime.now() - cache_time > timedelta(hours=CACHE_DURATION_HOURS):
+    if current_time - cache_time > timedelta(hours=CACHE_DURATION_HOURS):
+        return False
+    
+    # 检查是否跨过了0:00（强制刷新）
+    cache_date = cache_time.date()
+    current_date = current_time.date()
+    if cache_date != current_date:
         return False
     
     # 检查缓存文件是否存在
@@ -110,10 +142,13 @@ def save_to_cache(cache_key, data, page_name, params):
         params: 参数字典
     """
     try:
+        # 转换数据为JSON可序列化格式
+        json_data = convert_to_json_serializable(data)
+        
         # 保存数据到文件
         cache_file = get_cache_file_path(cache_key)
-        with open(cache_file, 'wb') as f:
-            pickle.dump(data, f)
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=2)
         
         # 更新元数据
         meta_data = load_cache_meta()
@@ -144,8 +179,8 @@ def load_from_cache(cache_key):
     try:
         cache_file = get_cache_file_path(cache_key)
         if os.path.exists(cache_file):
-            with open(cache_file, 'rb') as f:
-                data = pickle.load(f)
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
             print(f"从缓存加载: {cache_key}")
             return data
     except Exception as e:
@@ -276,49 +311,7 @@ def render_cache_management_ui():
     
     cache_info = get_cache_info()
     
-    # 显示缓存统计
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("总缓存数", cache_info['total_caches'])
-    
-    with col2:
-        st.metric("总大小", format_file_size(cache_info['total_size']))
-    
-    with col3:
-        if cache_info['oldest_cache']:
-            st.metric("最旧缓存", cache_info['oldest_cache'].strftime('%m-%d %H:%M'))
-        else:
-            st.metric("最旧缓存", "无")
-    
-    with col4:
-        if cache_info['newest_cache']:
-            st.metric("最新缓存", cache_info['newest_cache'].strftime('%m-%d %H:%M'))
-        else:
-            st.metric("最新缓存", "无")
-    
-    # 显示各页面缓存详情
-    if cache_info['pages']:
-        st.subheader("📋 页面缓存详情")
-        
-        for page_name, page_info in cache_info['pages'].items():
-            with st.expander(f"{page_name} ({page_info['count']}个缓存)"):
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    st.metric("缓存数量", page_info['count'])
-                
-                with col2:
-                    st.metric("总大小", format_file_size(page_info['size']))
-                
-                with col3:
-                    st.metric("最新缓存", page_info['newest'].strftime('%m-%d %H:%M'))
-                
-                # 清除该页面缓存的按钮
-                if st.button(f"🗑️ 清除 {page_name} 缓存", key=f"clear_{page_name}"):
-                    clear_page_cache(page_name)
-                    st.success(f"已清除 {page_name} 的缓存")
-                    st.rerun()
+    # 缓存统计已移除，不显示给用户
     
     # 全局操作
     st.subheader("🔧 全局操作")
@@ -339,8 +332,10 @@ def render_cache_management_ui():
     st.info("""
     **缓存说明：**
     - 所有页面计算结果默认缓存24小时
+    - 每天0:00后强制刷新所有缓存
     - 参数变化时会自动重新计算
     - 缓存过期后会在下次访问时自动刷新
+    - 使用JSON格式存储，便于查看和调试
     - 可以手动清除特定页面或所有缓存
     """)
 
