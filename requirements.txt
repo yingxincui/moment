@@ -13,7 +13,7 @@ plotly>=5.15.0
 schedule>=1.2.0
 
 # 剪贴板功能
-clipboard>=0.0.4
+st-copy-to-clipboard>=1.0.0
 
 # 数据处理工具
 python-dateutil>=2.8.0
