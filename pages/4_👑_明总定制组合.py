@@ -25,6 +25,9 @@ from core_strategy import (
     render_simplified_bias_table, render_all_etfs_trend_charts
 )
 
+# 导入页面缓存工具
+from page_cache_utils import render_cache_management_ui, clear_page_cache
+
 # 已改为使用Excel报告工具，不再需要PDF报告工具
 
 # 页面配置
@@ -69,6 +72,9 @@ etf_list = list(all_etfs.keys())
 default = list(all_etfs.keys())
 
 st.markdown(f"**{config['name']}ETF池：**")
+
+# 导入页面缓存工具
+from page_cache_utils import render_cache_management_ui, clear_page_cache
 st.info(config['description'])
 
 # ETF选择
@@ -98,7 +104,10 @@ def auto_calculate_momentum():
     
     with st.spinner("正在获取ETF数据并计算持仓..."):
         try:
-            selected_etfs_result, all_etfs_result = select_etfs(selected_etfs, all_etfs, momentum_period, ma_period)
+            selected_etfs_result, all_etfs_result = select_etfs(
+                selected_etfs, all_etfs, momentum_period, ma_period, 
+                use_cache=True, page_name="mingzong"
+            )
             return selected_etfs_result, all_etfs_result
         except Exception as e:
             st.error(f"计算失败: {e}")
@@ -133,17 +142,26 @@ else:
 
 # 显示结果
 if selected_etfs_result is not None and all_etfs_result is not None:
-    # 显示基础动量结果
-    render_momentum_results(selected_etfs_result, all_etfs_result, all_etfs, momentum_period, ma_period, max_positions)
+    # 先获取Bias分析数据（不显示，只用于AI分析）
+    bias_results = []
+    try:
+        # 静默获取Bias数据
+        import core_strategy
+        bias_results = core_strategy.render_simplified_bias_table(selected_etfs, all_etfs, page_name="mingzong", show_ui=False)
+    except:
+        pass
+    
+    # 显示基础动量结果（包含Bias数据）
+    render_momentum_results(selected_etfs_result, all_etfs_result, all_etfs, momentum_period, ma_period, max_positions, page_name="mingzong", bias_results=bias_results)
     
     # 添加Bias分析
     st.markdown("---")
     st.subheader(" Bias分析")
-    render_simplified_bias_table(selected_etfs, all_etfs)
+    render_simplified_bias_table(selected_etfs, all_etfs, page_name="mingzong")
     
     # 显示趋势图
     st.markdown("---")
-    render_all_etfs_trend_charts(selected_etfs, all_etfs)
+    render_all_etfs_trend_charts(selected_etfs, all_etfs, page_name="mingzong")
 
     # 添加Excel报告下载功能
     st.markdown("---")
@@ -214,6 +232,10 @@ st.sidebar.markdown(f"""
 # 显示缓存信息
 cache_meta = load_cache_meta()
 render_cache_info(cache_meta)
+
+# 添加缓存管理界面
+st.sidebar.markdown("---")
+render_cache_management_ui()
 
 # 手动刷新按钮
 if st.button(" 手动刷新数据"):

@@ -1,0 +1,95 @@
+{
+  "scitech_1ffd9380951f33d5fa33df86ed1ac417": {
+    "page_name": "scitech",
+    "params": {
+      "etf_list": [
+        "159781",
+        "159941",
+        "510300",
+        "511090",
+        "513050",
+        "518880"
+      ],
+      "momentum_period": 20,
+      "ma_period": 28
+    },
+    "created_at": "2025-09-07T23:36:19.147197",
+    "data_type": "dict",
+    "file_size": 730
+  },
+  "mingzong_70f2fc0dbb6b8cd66d5c966a5d08179d": {
+    "page_name": "mingzong",
+    "params": {
+      "etf_list": [
+        "159781",
+        "159915",
+        "159941",
+        "510300",
+        "511090",
+        "513050",
+        "518880",
+        "588000"
+      ],
+      "momentum_period": 20,
+      "ma_period": 28
+    },
+    "created_at": "2025-09-07T23:36:21.438108",
+    "data_type": "dict",
+    "file_size": 898
+  },
+  "default_5a600cb170014d5de6a8a58ec42a89b3": {
+    "page_name": "default",
+    "params": {
+      "etf_list": [
+        "159915",
+        "159941",
+        "510300",
+        "511090",
+        "513050",
+        "518880"
+      ],
+      "momentum_period": 20,
+      "ma_period": 28
+    },
+    "created_at": "2025-09-07T23:36:53.493425",
+    "data_type": "dict",
+    "file_size": 724
+  },
+  "option_572e7e7dd8f678b278d47ef4db252c29": {
+    "page_name": "option",
+    "params": {
+      "etf_list": [
+        "159901",
+        "159915",
+        "510050",
+        "510300",
+        "510500",
+        "588000"
+      ],
+      "momentum_period": 20,
+      "ma_period": 28
+    },
+    "created_at": "2025-09-07T23:37:12.964966",
+    "data_type": "dict",
+    "file_size": 722
+  },
+  "global_a7e253f5da21b1f1d694944bd364b0f4": {
+    "page_name": "global",
+    "params": {
+      "etf_list": [
+        "159329",
+        "159941",
+        "510300",
+        "513030",
+        "513050",
+        "513520",
+        "513730"
+      ],
+      "momentum_period": 20,
+      "ma_period": 28
+    },
+    "created_at": "2025-09-08T00:05:29.812036",
+    "data_type": "dict",
+    "file_size": 814
+  }
+}

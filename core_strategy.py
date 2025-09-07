@@ -15,6 +15,12 @@ import json
 import os
 import sys
 
+# 导入页面缓存工具
+from page_cache_utils import get_cached_result, cache_page_result, get_cached_page_result
+
+# 导入AI分析工具
+from ai_analysis_utils import render_compact_ai_button
+
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -202,7 +208,7 @@ def calculate_sharpe_ratio(values):
     
     return sharpe
 
-def select_etfs(etf_list, etf_names, momentum_period=20, ma_period=28):
+def select_etfs(etf_list, etf_names, momentum_period=20, ma_period=28, use_cache=True, page_name="default"):
     """
     筛选符合条件的ETF（兼容动量策略.py的接口）
     
@@ -211,11 +217,30 @@ def select_etfs(etf_list, etf_names, momentum_period=20, ma_period=28):
         etf_names: ETF名称字典
         momentum_period: 动量周期
         ma_period: 均线周期
+        use_cache: 是否使用缓存
+        page_name: 页面名称，用于缓存键
     
     Returns:
         selected_etfs: 选中的ETF列表
         all_etfs: 所有ETF的排名列表
     """
+    # 构建缓存参数
+    cache_params = {
+        'etf_list': tuple(sorted(etf_list)),
+        'momentum_period': momentum_period,
+        'ma_period': ma_period
+    }
+    
+    # 如果启用缓存，尝试从缓存获取结果
+    if use_cache:
+        cached_result = get_cached_page_result(page_name, **cache_params)
+        if cached_result is not None:
+            small_log(f"使用{page_name}页面缓存数据")
+            return cached_result['selected_etfs'], cached_result['all_etfs']
+    
+    # 缓存无效或未启用，重新计算
+    small_log(f"重新计算{page_name}页面数据...")
+    
     etf_data = {}
     for symbol in etf_list:
         try:
@@ -247,6 +272,15 @@ def select_etfs(etf_list, etf_names, momentum_period=20, ma_period=28):
     
     # 选择动量排名前两位且收盘价大于均线的ETF
     selected_etfs = [(etf[0], etf[1], etf[2], etf[3], etf[4]) for etf in all_etfs if etf[5]][:2]
+    
+    # 缓存结果
+    if use_cache:
+        result = {
+            'selected_etfs': selected_etfs,
+            'all_etfs': all_etfs
+        }
+        cache_page_result(page_name, result, **cache_params)
+    
     return selected_etfs, all_etfs
 
 def select_etfs_ui(etf_pool, default_selection=None):
@@ -313,7 +347,7 @@ def render_analysis_results(momentum_results, etf_pool):
                 st.write(f"**涨跌幅**: {row['涨跌幅']:.2f}%")
                 st.write(f"**成交量**: {row['成交量']:,.0f}")
 
-def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, momentum_period, ma_period, max_positions):
+def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, momentum_period, ma_period, max_positions, show_ai_analysis=True, page_name="default", bias_results=None):
     """
     渲染动量策略结果（兼容动量策略.py的输出格式）
     
@@ -324,6 +358,8 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
         momentum_period: 动量周期
         ma_period: 均线周期
         max_positions: 最大持仓数量
+        show_ai_analysis: 是否显示AI分析功能
+        page_name: 页面名称
     """
     st.subheader("动量策略分析结果")
     
@@ -423,6 +459,26 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
         
         if all_data:
             all_df = pd.DataFrame(all_data)
+            
+            # 在表格上方添加AI分析按钮
+            if show_ai_analysis:
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col2:
+                    # 准备完整分析数据（包含Bias数据）
+                    complete_data = {
+                        'selected_etfs_result': selected_etfs_result,
+                        'all_etfs_result': all_etfs_result,
+                        'bias_results': bias_results,
+                        'strategy_params': {
+                            'momentum_period': momentum_period,
+                            'ma_period': ma_period,
+                            'max_positions': max_positions
+                        },
+                        'page_name': page_name
+                    }
+                    render_compact_ai_button(complete_data, "complete_analysis", f"complete_{page_name}")
+                with col3:
+                    st.markdown("💡 点击按钮复制数据")
             
             # 显示表格（简化样式处理）
             st.dataframe(all_df, use_container_width=True)
@@ -571,6 +627,7 @@ def render_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, mom
                 • 图表按动量从高到低排序，动量最高的ETF显示在最上方
             </div>
             """, unsafe_allow_html=True)
+    
     
     # 策略说明已移至页面顶部的折叠组件中
 
@@ -1188,7 +1245,7 @@ def render_bias_analysis(etf_code, etf_name, df, periods=[6, 12, 24]):
             else:
                 st.success(f" {period_num}日偏离度在正常范围内")
 
-def render_simplified_bias_table(etf_list, etf_names, periods=[6, 12, 24]):
+def render_simplified_bias_table(etf_list, etf_names, periods=[6, 12, 24], show_ai_analysis=True, page_name="default", show_ui=True):
     """
     渲染Bias分析表格（所有标的在一个表格中）
     
@@ -1196,6 +1253,8 @@ def render_simplified_bias_table(etf_list, etf_names, periods=[6, 12, 24]):
         etf_list: ETF代码列表
         etf_names: ETF名称字典
         periods: 分析周期
+        show_ai_analysis: 是否显示AI分析功能
+        page_name: 页面名称
     """
     bias_results = []
     
@@ -1242,93 +1301,100 @@ def render_simplified_bias_table(etf_list, etf_names, periods=[6, 12, 24]):
             continue
     
     if bias_results:
-        # 创建DataFrame
-        bias_df = pd.DataFrame(bias_results)
-        
-        # 重新排序列
-        columns_order = ['ETF代码', 'ETF名称']
-        for period in periods:
-            columns_order.append(f'{period}日偏离度')
-        columns_order.append('超买超卖结论')
-        
-        # 确保所有列都存在
-        for col in columns_order:
-            if col not in bias_df.columns:
-                bias_df[col] = '-'
-        
-        # 按列顺序重新排列
-        bias_df = bias_df[columns_order]
-        
-        # 美化表格显示
-        def style_bias_table(df):
-            """美化Bias分析表格"""
-            def color_bias_values(val):
-                """为偏离度值添加颜色"""
-                if isinstance(val, str) and '%' in val:
-                    try:
-                        bias_value = float(val.rstrip('%'))
-                        if bias_value > 5:
-                            return 'background-color: #ffebee; color: #c62828; font-weight: bold'  # 超买：浅红色
-                        elif bias_value > 2:
-                            return 'background-color: #fff3e0; color: #ef6c00; font-weight: bold'  # 偏超买：浅橙色
-                        elif bias_value < -5:
-                            return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold'  # 超卖：浅绿色
-                        elif bias_value < -2:
-                            return 'background-color: #f3e5f5; color: #7b1fa2; font-weight: bold'  # 偏超卖：浅紫色
-                        else:
-                            return 'background-color: #f5f5f5; color: #424242; font-weight: bold'  # 正常：浅灰色
-                    except:
-                        return ''
-                return ''
+        if show_ui:
+            # 创建DataFrame
+            bias_df = pd.DataFrame(bias_results)
             
-            def color_conclusion(val):
-                """为超买超卖结论添加颜色"""
-                if isinstance(val, str):
-                    if '' in val or '超买' in val:
-                        return 'background-color: #ffebee; color: #c62828; font-weight: bold'
-                    elif '' in val or '超卖' in val:
-                        return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold'
-                    elif '🟡' in val or '偏超买' in val:
-                        return 'background-color: #fff3e0; color: #ef6c00; font-weight: bold'
-                    elif '' in val or '偏超卖' in val:
-                        return 'background-color: #f3e5f5; color: #7b1fa2; font-weight: bold'
-                    elif '' in val or '正常' in val:
-                        return 'background-color: #f5f5f5; color: #424242; font-weight: bold'
-                return ''
+            # 重新排序列
+            columns_order = ['ETF代码', 'ETF名称']
+            for period in periods:
+                columns_order.append(f'{period}日偏离度')
+            columns_order.append('超买超卖结论')
             
-            # 应用样式
-            styled_df = df.style.map(color_bias_values, subset=[col for col in df.columns if '偏离度' in col])
-            styled_df = styled_df.map(color_conclusion, subset=['超买超卖结论'])
+            # 确保所有列都存在
+            for col in columns_order:
+                if col not in bias_df.columns:
+                    bias_df[col] = '-'
             
-            return styled_df
-        
-        # 应用美化样式
-        styled_bias_df = style_bias_table(bias_df)
-        
-        # 显示美化后的表格
-        st.dataframe(styled_bias_df, use_container_width=True)
-        
-        # 添加表格说明
-        st.markdown("""
-        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-top: 15px;'>
-            <strong> Bias分析说明：</strong><br>
-            <strong>偏离度阈值标准：</strong><br>
-            • <span style='color: #c62828;'>🔴 中长线超买</span>：24日BIAS > +9%<br>
-            • <span style='color: #c62828;'>🟠 中线超买</span>：12日BIAS > +5%<br>
-            • <span style='color: #ef6c00;'>🟡 短线超买</span>：6日BIAS > +3.5%<br>
-            • <span style='color: #1565c0;'>✅ 正常</span>：所有BIAS在正常范围内<br>
-            • <span style='color: #2196f3;'>🔵 短线超卖</span>：6日BIAS < -3.5%<br>
-            • <span style='color: #7b1fa2;'>🟣 中线超卖</span>：12日BIAS < -5%<br>
-            • <span style='color: #2e7d32;'>🟢 中长线超卖</span>：24日BIAS < -9%<br>
-            <br>
-            <strong>投资建议：</strong>短线超买可考虑卖出，短线超卖可考虑买入
-        </div>
-        """, unsafe_allow_html=True)
-        
+            # 按列顺序重新排列
+            bias_df = bias_df[columns_order]
+            
+            # 美化表格显示
+            def style_bias_table(df):
+                """美化Bias分析表格"""
+                def color_bias_values(val):
+                    """为偏离度值添加颜色"""
+                    if isinstance(val, str) and '%' in val:
+                        try:
+                            bias_value = float(val.rstrip('%'))
+                            if bias_value > 5:
+                                return 'background-color: #ffebee; color: #c62828; font-weight: bold'  # 超买：浅红色
+                            elif bias_value > 2:
+                                return 'background-color: #fff3e0; color: #ef6c00; font-weight: bold'  # 偏超买：浅橙色
+                            elif bias_value < -5:
+                                return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold'  # 超卖：浅绿色
+                            elif bias_value < -2:
+                                return 'background-color: #f3e5f5; color: #7b1fa2; font-weight: bold'  # 偏超卖：浅紫色
+                            else:
+                                return 'background-color: #f5f5f5; color: #424242; font-weight: bold'  # 正常：浅灰色
+                        except:
+                            return ''
+                    return ''
+                
+                def color_conclusion(val):
+                    """为超买超卖结论添加颜色"""
+                    if isinstance(val, str):
+                        if '' in val or '超买' in val:
+                            return 'background-color: #ffebee; color: #c62828; font-weight: bold'
+                        elif '' in val or '超卖' in val:
+                            return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold'
+                        elif '🟡' in val or '偏超买' in val:
+                            return 'background-color: #fff3e0; color: #ef6c00; font-weight: bold'
+                        elif '' in val or '偏超卖' in val:
+                            return 'background-color: #f3e5f5; color: #7b1fa2; font-weight: bold'
+                        elif '' in val or '正常' in val:
+                            return 'background-color: #f5f5f5; color: #424242; font-weight: bold'
+                    return ''
+                
+                # 应用样式
+                styled_df = df.style.map(color_bias_values, subset=[col for col in df.columns if '偏离度' in col])
+                styled_df = styled_df.map(color_conclusion, subset=['超买超卖结论'])
+                
+                return styled_df
+            
+            # 应用美化样式
+            styled_bias_df = style_bias_table(bias_df)
+            
+            # 显示美化后的表格
+            st.dataframe(styled_bias_df, use_container_width=True)
+            
+            # 添加表格说明
+            st.markdown("""
+            <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-top: 15px;'>
+                <strong> Bias分析说明：</strong><br>
+                <strong>偏离度阈值标准：</strong><br>
+                • <span style='color: #c62828;'>🔴 中长线超买</span>：24日BIAS > +9%<br>
+                • <span style='color: #c62828;'>🟠 中线超买</span>：12日BIAS > +5%<br>
+                • <span style='color: #ef6c00;'>🟡 短线超买</span>：6日BIAS > +3.5%<br>
+                • <span style='color: #1565c0;'>✅ 正常</span>：所有BIAS在正常范围内<br>
+                • <span style='color: #2196f3;'>🔵 短线超卖</span>：6日BIAS < -3.5%<br>
+                • <span style='color: #7b1fa2;'>🟣 中线超卖</span>：12日BIAS < -5%<br>
+                • <span style='color: #2e7d32;'>🟢 中长线超卖</span>：24日BIAS < -9%<br>
+                <br>
+                <strong>投资建议：</strong>短线超买可考虑卖出，短线超卖可考虑买入
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            # 不显示UI，只返回数据
+            pass
     else:
-        st.warning("无法获取Bias分析数据")
+        if show_ui:
+            st.warning("无法获取Bias分析数据")
+    
+    return bias_results
+    
 
-def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, momentum_period, ma_period, max_positions):
+def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_pool, momentum_period, ma_period, max_positions, show_ai_analysis=True, page_name="default", bias_results=None):
     """
     渲染增强版动量策略结果（包含更多分析信息）
     
@@ -1448,6 +1514,27 @@ def render_enhanced_momentum_results(selected_etfs_result, all_etfs_result, etf_
         
         if all_data:
             all_df = pd.DataFrame(all_data)
+            
+            # 在表格上方添加AI分析按钮
+            if show_ai_analysis:
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col2:
+                    # 准备完整分析数据（包含Bias数据）
+                    complete_data = {
+                        'selected_etfs_result': selected_etfs_result,
+                        'all_etfs_result': all_etfs_result,
+                        'bias_results': bias_results,
+                        'strategy_params': {
+                            'momentum_period': momentum_period,
+                            'ma_period': ma_period,
+                            'max_positions': max_positions
+                        },
+                        'page_name': page_name
+                    }
+                    render_compact_ai_button(complete_data, "complete_analysis", f"complete_{page_name}")
+                with col3:
+                    st.markdown("💡 点击按钮复制数据")
+            
             # 显示表格，不设置高度避免滚动条
             st.dataframe(all_df, use_container_width=True)
             
@@ -1597,7 +1684,7 @@ def show_bias_statistics(bias_results):
             if '超卖' in conclusion:
                 st.markdown(f"- {result['ETF代码']} {result['ETF名称']}: {conclusion} - 可考虑逢低布局")
 
-def render_etf_trend_chart(etf_list, etf_names, periods=[6, 12, 24]):
+def render_etf_trend_chart(etf_list, etf_names, periods=[6, 12, 24], show_ai_analysis=True, page_name="default"):
     """
     渲染所有ETF近一年累计涨跌幅趋势图（所有标的在同一张图上）
     
@@ -1605,6 +1692,8 @@ def render_etf_trend_chart(etf_list, etf_names, periods=[6, 12, 24]):
         etf_list: ETF代码列表
         etf_names: ETF名称字典
         periods: 分析周期（用于计算偏离度）
+        show_ai_analysis: 是否显示AI分析功能
+        page_name: 页面名称
     """
     st.subheader(" 所有ETF近一年累计涨跌幅趋势")
     
@@ -1922,13 +2011,16 @@ def render_etf_trend_chart(etf_list, etf_names, periods=[6, 12, 24]):
         small_log(f"绘制趋势图失败: {e}")
         import traceback
         st.markdown(f"<div style='font-size:12px; color:#888;'>错误详情: {traceback.format_exc()}</div>", unsafe_allow_html=True)
+    
 
-def render_all_etfs_trend_charts(etf_list, etf_names):
+def render_all_etfs_trend_charts(etf_list, etf_names, show_ai_analysis=True, page_name="default"):
     """
     为所有ETF渲染趋势图（现在直接调用render_etf_trend_chart）
     
     Args:
         etf_list: ETF代码列表
         etf_names: ETF名称字典
+        show_ai_analysis: 是否显示AI分析功能
+        page_name: 页面名称
     """
-    render_etf_trend_chart(etf_list, etf_names)
+    render_etf_trend_chart(etf_list, etf_names, show_ai_analysis=show_ai_analysis, page_name=page_name)
