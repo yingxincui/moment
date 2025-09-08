@@ -14,7 +14,7 @@ import pandas as pd
 
 # 缓存配置
 CACHE_DIR = "page_cache"
-CACHE_DURATION_HOURS = 24  # 缓存24小时
+CACHE_DURATION_HOURS = 1  # 缓存1小时
 CACHE_META_FILE = "cache_meta.json"
 
 def convert_to_json_serializable(data):
@@ -219,12 +219,41 @@ def get_cached_result(page_name, params, compute_func, *args, **kwargs):
     
     return result
 
-def clear_page_cache(page_name=None):
+def _clear_streamlit_internal_caches():
+    """清除Streamlit内部缓存（如有使用）。"""
+    try:
+        # 这些API仅在使用st.cache_data/st.cache_resource时有效
+        if hasattr(st, "cache_data"):
+            st.cache_data.clear()
+        if hasattr(st, "cache_resource"):
+            st.cache_resource.clear()
+    except Exception as e:
+        print(f"清除Streamlit内部缓存失败: {e}")
+
+
+def _clear_etf_data_cache():
+    """清理本地ETF数据缓存目录（etf_cache），以强制重新拉取数据。"""
+    try:
+        data_dir = "etf_cache"
+        if os.path.isdir(data_dir):
+            for filename in os.listdir(data_dir):
+                file_path = os.path.join(data_dir, filename)
+                try:
+                    if os.path.isfile(file_path) and filename.lower().endswith((".csv", ".json")):
+                        os.remove(file_path)
+                except Exception as e:
+                    print(f"删除数据缓存文件失败 {file_path}: {e}")
+    except Exception as e:
+        print(f"清理ETF数据缓存失败: {e}")
+
+
+def clear_page_cache(page_name=None, also_clear_data_cache=True):
     """
-    清除页面缓存
+    清除页面缓存，并可选清除数据源缓存与内部缓存。
     
     Args:
-        page_name: 页面名称，如果为None则清除所有缓存
+        page_name: 页面名称；None表示清除所有页面缓存
+        also_clear_data_cache: 是否一并清理etf_cache下的数据缓存
     """
     meta_data = load_cache_meta()
     
@@ -249,7 +278,15 @@ def clear_page_cache(page_name=None):
             del meta_data[cache_key]
     
     save_cache_meta(meta_data)
-    print(f"缓存已清除: {page_name if page_name else '所有页面'}")
+
+    # 清除Streamlit内部缓存
+    _clear_streamlit_internal_caches()
+
+    # 可选：清除数据源缓存
+    if also_clear_data_cache:
+        _clear_etf_data_cache()
+
+    print(f"缓存已清除: {page_name if page_name else '所有页面'}；also_clear_data_cache={also_clear_data_cache}")
 
 def get_cache_info():
     """
@@ -331,7 +368,7 @@ def render_cache_management_ui():
     # 缓存说明
     st.info("""
     **缓存说明：**
-    - 所有页面计算结果默认缓存24小时
+    - 所有页面计算结果默认缓存1小时
     - 每天0:00后强制刷新所有缓存
     - 参数变化时会自动重新计算
     - 缓存过期后会在下次访问时自动刷新

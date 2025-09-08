@@ -99,7 +99,7 @@ def auto_calculate_momentum():
             # 使用缓存功能，页面名称为"scitech"
             selected_etfs_result, all_etfs_result = select_etfs(
                 selected_etfs, all_etfs, momentum_period, ma_period, 
-                use_cache=True, page_name="scitech"
+                use_cache=False, page_name="scitech"
             )
             return selected_etfs_result, all_etfs_result
         except Exception as e:

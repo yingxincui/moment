@@ -61,7 +61,7 @@ def auto_calculate_momentum():
         try:
             selected_etfs_result, all_etfs_result = select_etfs(
                 selected_etfs, all_etfs, momentum_period, ma_period, 
-                use_cache=True, page_name="option"
+                use_cache=False, page_name="option"
             )
             return selected_etfs_result, all_etfs_result
         except Exception as e:

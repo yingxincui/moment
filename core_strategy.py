@@ -208,7 +208,7 @@ def calculate_sharpe_ratio(values):
     
     return sharpe
 
-def select_etfs(etf_list, etf_names, momentum_period=20, ma_period=28, use_cache=True, page_name="default"):
+def select_etfs(etf_list, etf_names, momentum_period=20, ma_period=28, use_cache=False, page_name="default"):
     """
     筛选符合条件的ETF（兼容动量策略.py的接口）
     
